@@ -2,7 +2,7 @@ using CheckoutKata.Core;
 
 namespace CheckoutKata.Tests;
 
-public class CheckoutTests
+public class CheckoutUnitTests
 {
     [TestCase("A", 50)]
     [TestCase("B", 30)]
