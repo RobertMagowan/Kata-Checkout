@@ -4,8 +4,32 @@ namespace CheckoutKata.Tests;
 
 public class CheckoutTests
 {
+    [TestCase("A", 50)]
+    [TestCase("B", 30)]
+    [TestCase("C", 20)]
+    [TestCase("D", 15)]
+    public void GetTotalPrice_WithSingleItem_ReturnsUnitPrice(string item, int expectedTotal)
+    {
+        var checkout = CreateCheckout();
+
+        checkout.Scan(item);
+
+        var totalPrice = checkout.GetTotalPrice();
+
+        Assert.That(totalPrice, Is.EqualTo(expectedTotal));
+    }
+
     [Test]
     public void GetTotalPrice_WithNoScannedItems_ReturnsZero()
+    {
+        var checkout = CreateCheckout();
+
+        var totalPrice = checkout.GetTotalPrice();
+
+        Assert.That(totalPrice, Is.EqualTo(0));
+    }
+
+    private static ICheckout CreateCheckout()
     {
         var rules = new[]
         {
@@ -15,10 +39,6 @@ public class CheckoutTests
             new PricingRule("D", 15)
         };
 
-        ICheckout checkout = new Checkout(rules);
-
-        var totalPrice = checkout.GetTotalPrice();
-
-        Assert.That(totalPrice, Is.EqualTo(0));
+        return new Checkout(rules);
     }
 }
