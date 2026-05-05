@@ -23,32 +23,6 @@ public sealed class Checkout(IReadOnlyCollection<PricingRule> pricingRules) : IC
 
     public int GetTotalPrice()
     {
-        var totalPrice = 0;
-
-        foreach (var (item, count) in _scannedItemCounts)
-        {
-            if (!_pricingRulesByItem.TryGetValue(item, out var rule))
-            {
-                continue;
-            }
-
-            totalPrice += CalculatePriceForItem(rule, count);
-        }
-
-        return totalPrice;
-    }
-
-    private static int CalculatePriceForItem(PricingRule rule, int count)
-    {
-        if (rule.SpecialQuantity is null || rule.SpecialPrice is null)
-        {
-            return rule.UnitPrice * count;
-        }
-
-        var specialQuantity = rule.SpecialQuantity.Value;
-        var specialApplications = count / specialQuantity;
-        var remainingItems = count % specialQuantity;
-
-        return (specialApplications * rule.SpecialPrice.Value) + (remainingItems * rule.UnitPrice);
+        return BasketPricer.CalculateTotalPrice(_scannedItemCounts, _pricingRulesByItem);
     }
 }

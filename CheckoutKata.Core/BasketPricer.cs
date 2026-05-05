@@ -1,0 +1,39 @@
+using System.Collections.Generic;
+
+namespace CheckoutKata.Core;
+
+internal static class BasketPricer
+{
+    public static int CalculateTotalPrice(
+        IReadOnlyDictionary<string, int> scannedItemCounts,
+        IReadOnlyDictionary<string, PricingRule> pricingRulesByItem)
+    {
+        var totalPrice = 0;
+
+        foreach (var (item, count) in scannedItemCounts)
+        {
+            if (!pricingRulesByItem.TryGetValue(item, out var rule))
+            {
+                continue;
+            }
+
+            totalPrice += CalculateItemPrice(rule, count);
+        }
+
+        return totalPrice;
+    }
+
+    private static int CalculateItemPrice(PricingRule rule, int count)
+    {
+        if (rule.SpecialQuantity is null || rule.SpecialPrice is null)
+        {
+            return rule.UnitPrice * count;
+        }
+
+        var specialQuantity = rule.SpecialQuantity.Value;
+        var specialApplications = count / specialQuantity;
+        var remainingItems = count % specialQuantity;
+
+        return (specialApplications * rule.SpecialPrice.Value) + (remainingItems * rule.UnitPrice);
+    }
+}

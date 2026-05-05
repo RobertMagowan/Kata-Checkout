@@ -69,6 +69,18 @@ public class CheckoutTests
         Assert.That(totalPrice, Is.EqualTo(expectedTotal));
     }
 
+    [Test]
+    public void GetTotalPrice_WithMixedBasket_AppliesMultipleSpecialOffers()
+    {
+        var checkout = CreateCheckout();
+
+        ScanMany(checkout, "AAABBCCD");
+
+        var totalPrice = checkout.GetTotalPrice();
+
+        Assert.That(totalPrice, Is.EqualTo(230));
+    }
+
     private static ICheckout CreateCheckout()
     {
         var rules = new[]
