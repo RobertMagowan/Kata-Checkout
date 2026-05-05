@@ -32,9 +32,21 @@ public sealed class Checkout(IReadOnlyCollection<PricingRule> pricingRules) : IC
                 continue;
             }
 
-            totalPrice += rule.UnitPrice * count;
+            totalPrice += CalculatePriceForItem(rule, count);
         }
 
         return totalPrice;
+    }
+
+    private static int CalculatePriceForItem(PricingRule rule, int count)
+    {
+        if (rule.SpecialQuantity is null || rule.SpecialPrice is null)
+        {
+            return rule.UnitPrice * count;
+        }
+
+        return count >= rule.SpecialQuantity
+            ? rule.SpecialPrice.Value + ((count - rule.SpecialQuantity.Value) * rule.UnitPrice)
+            : count * rule.UnitPrice;
     }
 }
