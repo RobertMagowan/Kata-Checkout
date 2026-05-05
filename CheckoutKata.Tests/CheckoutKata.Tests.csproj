@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.7" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.0" />
     <PackageReference Include="NUnit" Version="4.3.2" />
     <PackageReference Include="NUnit.Analyzers" Version="4.7.0" />
@@ -22,6 +23,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CheckoutKata.Core\CheckoutKata.Core.csproj" />
+    <ProjectReference Include="..\CheckoutKata.Application\CheckoutKata.Application.csproj" />
+    <ProjectReference Include="..\CheckoutKata.Api\CheckoutKata.Api.csproj" />
   </ItemGroup>
 
 </Project>
