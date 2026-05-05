@@ -1,24 +1,27 @@
 using System.Collections.Concurrent;
 using CheckoutKata.Application.Exceptions;
+using CheckoutKata.Application.Persistence;
 using CheckoutKata.Application.Pricing;
 using CheckoutKata.Core;
+using Microsoft.EntityFrameworkCore;
 
 namespace CheckoutKata.Application.Carts;
 
 public sealed class CheckoutSessionService : ICheckoutSessionService, ICheckoutSessionMaintenance
 {
-    private readonly IPricingVersionRepository _pricingVersionRepository;
+    private readonly IDbContextFactory<CheckoutKataDbContext> _dbContextFactory;
     private readonly TimeProvider _timeProvider;
     private readonly CartSessionOptions _options;
     private readonly ConcurrentDictionary<Guid, CartSession> _sessionsByCartId = new();
     private readonly object _sessionsSyncRoot = new();
+    private readonly object _pricingSeedSyncRoot = new();
 
     public CheckoutSessionService(
-        IPricingVersionRepository pricingVersionRepository,
+        IDbContextFactory<CheckoutKataDbContext> dbContextFactory,
         TimeProvider? timeProvider = null,
         CartSessionOptions? options = null)
     {
-        _pricingVersionRepository = pricingVersionRepository ?? throw new ArgumentNullException(nameof(pricingVersionRepository));
+        _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
         _timeProvider = timeProvider ?? TimeProvider.System;
         _options = options ?? new CartSessionOptions();
 
@@ -41,11 +44,13 @@ public sealed class CheckoutSessionService : ICheckoutSessionService, ICheckoutS
         {
             throw new ArgumentException("Absolute max age must be greater than zero when provided.", nameof(options));
         }
+
+        EnsureDefaultPricingVersionSeeded();
     }
 
     public async Task<CartSnapshot> CreateCartAsync(CancellationToken cancellationToken = default)
     {
-        var pricingVersion = await _pricingVersionRepository.GetLatestVersionAsync(cancellationToken);
+        var pricingVersion = await GetLatestActivePricingVersionAsync(cancellationToken);
         var now = _timeProvider.GetUtcNow();
         Guid cartId;
 
@@ -160,6 +165,50 @@ public sealed class CheckoutSessionService : ICheckoutSessionService, ICheckoutS
 
     public int ActiveCartCount => _sessionsByCartId.Count;
 
+    private void EnsureDefaultPricingVersionSeeded()
+    {
+        lock (_pricingSeedSyncRoot)
+        {
+            using var dbContext = _dbContextFactory.CreateDbContext();
+
+            if (dbContext.PricingVersions.Any(version => version.IsActive))
+            {
+                return;
+            }
+
+            var defaultRules = GetDefaultPricingRules()
+                .OrderBy(rule => rule.Item, StringComparer.Ordinal)
+                .ToArray();
+
+            _ = new Checkout(defaultRules);
+
+            var defaultPricingVersion = new PricingVersion(
+                PricingVersionId.New(),
+                _timeProvider.GetUtcNow(),
+                IsActive: true,
+                defaultRules);
+
+            dbContext.PricingVersions.Add(PricingVersionEntityMapper.ToEntity(defaultPricingVersion));
+            dbContext.SaveChanges();
+        }
+    }
+
+    private async Task<PricingVersion> GetLatestActivePricingVersionAsync(CancellationToken cancellationToken)
+    {
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        var activeVersion = await dbContext.PricingVersions
+            .AsNoTracking()
+            .SingleOrDefaultAsync(version => version.IsActive, cancellationToken);
+
+        if (activeVersion is null)
+        {
+            throw new InvalidOperationException("No active pricing version is configured.");
+        }
+
+        return PricingVersionEntityMapper.ToModel(activeVersion);
+    }
+
     private Task<CartSnapshot> AccessSessionAsync(
         Guid cartId,
         PricingVersionId? requestedPricingVersionId,
@@ -264,6 +313,15 @@ public sealed class CheckoutSessionService : ICheckoutSessionService, ICheckoutS
 
         return removedCount;
     }
+
+    private static IReadOnlyCollection<PricingRule> GetDefaultPricingRules() =>
+        new[]
+        {
+            new PricingRule("A", 50, 3, 130),
+            new PricingRule("B", 30, 2, 45),
+            new PricingRule("C", 20),
+            new PricingRule("D", 15)
+        };
 
     private sealed class CartSession(
         Guid cartId,

@@ -1,8 +1,11 @@
-using CheckoutKata.Application.Exceptions;
-using CheckoutKata.Application.Pricing;
+using System.Text.Json;
 using CheckoutKata.Application.Carts;
+using CheckoutKata.Application.Exceptions;
+using CheckoutKata.Application.Persistence;
+using CheckoutKata.Application.Pricing;
 using CheckoutKata.Core;
 using CheckoutKata.Tests.TestHelpers;
+using Microsoft.EntityFrameworkCore;
 
 namespace CheckoutKata.Tests.Application;
 
@@ -11,31 +14,33 @@ public class CheckoutSessionServiceTests
     [Test]
     public async Task CreateCartAsync_PinsLatestPricingVersion()
     {
-        var repository = new InMemoryPricingVersionRepository();
-        var service = new CheckoutSessionService(repository);
+        var dbContextFactory = TestDbContextFactory.Create();
+        var service = new CheckoutSessionService(dbContextFactory);
 
-        var latestVersion = await repository.GetLatestVersionAsync();
         var snapshot = await service.CreateCartAsync();
 
-        Assert.That(snapshot.PricingVersionId, Is.EqualTo(latestVersion.Id));
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync();
+        var latestVersion = await dbContext.PricingVersions.SingleAsync(version => version.IsActive);
+
+        Assert.That(snapshot.PricingVersionId, Is.EqualTo(PricingVersionId.Parse(latestVersion.Id)));
     }
 
     [Test]
     public async Task ScanItemAsync_WhenPricingVersionChangesAfterCartCreation_UsesPinnedCartVersion()
     {
-        var repository = new InMemoryPricingVersionRepository();
-        var service = new CheckoutSessionService(repository);
+        var dbContextFactory = TestDbContextFactory.Create();
+        var service = new CheckoutSessionService(dbContextFactory);
 
         var firstCart = await service.CreateCartAsync();
-        await repository.CreateVersionAsync(
+        await ActivatePricingVersionAsync(
+            dbContextFactory,
             new[]
             {
                 new PricingRule("A", 70, 3, 190),
                 new PricingRule("B", 35, 2, 55),
                 new PricingRule("C", 20),
                 new PricingRule("D", 15)
-            },
-            setAsActive: true);
+            });
 
         var updatedFirstCart = await service.ScanItemAsync(firstCart.CartId, "A");
         var secondCart = await service.CreateCartAsync();
@@ -51,8 +56,8 @@ public class CheckoutSessionServiceTests
     [Test]
     public async Task ScanItemAsync_WhenRequestedPricingVersionDiffersFromPinnedVersion_ThrowsPricingVersionMismatchException()
     {
-        var repository = new InMemoryPricingVersionRepository();
-        var service = new CheckoutSessionService(repository);
+        var dbContextFactory = TestDbContextFactory.Create();
+        var service = new CheckoutSessionService(dbContextFactory);
         var snapshot = await service.CreateCartAsync();
         var mismatchedVersionId = PricingVersionId.New();
 
@@ -69,9 +74,9 @@ public class CheckoutSessionServiceTests
     {
         var now = DateTimeOffset.UtcNow;
         var timeProvider = new TestTimeProvider(now);
-        var repository = new InMemoryPricingVersionRepository();
+        var dbContextFactory = TestDbContextFactory.Create();
         var service = new CheckoutSessionService(
-            repository,
+            dbContextFactory,
             timeProvider,
             new CartSessionOptions
             {
@@ -93,9 +98,9 @@ public class CheckoutSessionServiceTests
     {
         var now = DateTimeOffset.UtcNow;
         var timeProvider = new TestTimeProvider(now);
-        var repository = new InMemoryPricingVersionRepository();
+        var dbContextFactory = TestDbContextFactory.Create();
         var service = new CheckoutSessionService(
-            repository,
+            dbContextFactory,
             timeProvider,
             new CartSessionOptions
             {
@@ -123,9 +128,9 @@ public class CheckoutSessionServiceTests
     {
         var now = DateTimeOffset.UtcNow;
         var timeProvider = new TestTimeProvider(now);
-        var repository = new InMemoryPricingVersionRepository();
+        var dbContextFactory = TestDbContextFactory.Create();
         var service = new CheckoutSessionService(
-            repository,
+            dbContextFactory,
             timeProvider,
             new CartSessionOptions
             {
@@ -149,9 +154,9 @@ public class CheckoutSessionServiceTests
     [Test]
     public async Task CreateCartAsync_WhenMaxCapacityReached_ThrowsCartCapacityExceededException()
     {
-        var repository = new InMemoryPricingVersionRepository();
+        var dbContextFactory = TestDbContextFactory.Create();
         var service = new CheckoutSessionService(
-            repository,
+            dbContextFactory,
             TimeProvider.System,
             new CartSessionOptions
             {
@@ -165,5 +170,33 @@ public class CheckoutSessionServiceTests
         Assert.That(
             async () => await service.CreateCartAsync(),
             Throws.TypeOf<CartCapacityExceededException>());
+    }
+
+    private static async Task ActivatePricingVersionAsync(
+        IDbContextFactory<CheckoutKataDbContext> dbContextFactory,
+        IReadOnlyCollection<PricingRule> rules)
+    {
+        _ = new Checkout(rules);
+
+        var normalizedRules = rules
+            .OrderBy(rule => rule.Item, StringComparer.Ordinal)
+            .ToArray();
+
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync();
+
+        foreach (var activeVersion in dbContext.PricingVersions.Where(version => version.IsActive))
+        {
+            activeVersion.IsActive = false;
+        }
+
+        dbContext.PricingVersions.Add(new PricingVersionEntity
+        {
+            Id = Guid.NewGuid(),
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+            IsActive = true,
+            RulesJson = JsonSerializer.Serialize(normalizedRules)
+        });
+
+        await dbContext.SaveChangesAsync();
     }
 }

@@ -1,6 +1,6 @@
 # Assumptions
 
-1. Pricing and offer rules are repository-backed and versioned.
+1. Pricing and offer rules are EF Core InMemory-backed and versioned.
 2. Cart state is runtime/in-memory in this increment and is not persisted.
 3. Pricing version identifiers are GUID-based.
 4. A cart pins pricing version at creation time and keeps it until expiry.
@@ -15,3 +15,4 @@
 13. Failed validation/write operations do not refresh cart sliding TTL.
 14. Cart capacity is bounded (`MaxCarts`) and create requests fail with `429` when capacity is exhausted.
 15. Expired carts are evicted by background sweep and on-demand checks.
+16. Pricing store name is configurable via API appsettings at `Checkout:PricingStore:DatabaseName`.

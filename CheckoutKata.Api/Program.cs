@@ -2,7 +2,7 @@ using CheckoutKata.Api.Composition;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddCheckoutKataApiServices(TimeProvider.System);
+builder.Services.AddCheckoutKataApiServices(builder.Configuration, TimeProvider.System);
 
 var app = builder.Build();
 

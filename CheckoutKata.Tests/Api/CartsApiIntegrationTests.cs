@@ -2,8 +2,8 @@ using System.Net;
 using System.Net.Http.Json;
 using CheckoutKata.Api.Endpoints.Carts.Contracts.Requests;
 using CheckoutKata.Api.Endpoints.Carts.Contracts.Responses;
-using CheckoutKata.Application.Pricing;
 using CheckoutKata.Application.Carts;
+using CheckoutKata.Application.Persistence;
 using CheckoutKata.Core;
 using CheckoutKata.Tests.TestHelpers;
 using Microsoft.AspNetCore.Mvc;
@@ -135,8 +135,8 @@ public class CartsApiIntegrationTests
     {
         var basketItems = "DABABA".Select(item => item.ToString()).ToArray();
 
-        var repository = new InMemoryPricingVersionRepository();
-        var directService = new CheckoutSessionService(repository);
+        var dbContextFactory = TestDbContextFactory.Create();
+        var directService = new CheckoutSessionService(dbContextFactory);
         var directCart = await directService.CreateCartAsync();
         var directSnapshot = await directService.ScanManyAsync(directCart.CartId, basketItems, directCart.PricingVersionId);
 

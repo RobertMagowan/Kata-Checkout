@@ -1,8 +1,9 @@
-using CheckoutKata.Application.Pricing;
 using CheckoutKata.Application.Carts;
+using CheckoutKata.Application.Persistence;
 using CheckoutKata.Tests.TestHelpers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -18,20 +19,21 @@ internal sealed class ApiTestWebApplicationFactory(
     {
         builder.ConfigureServices(services =>
         {
-            services.RemoveAll<IPricingVersionRepository>();
+            services.RemoveAll<IDbContextFactory<CheckoutKataDbContext>>();
             services.RemoveAll<ICheckoutSessionService>();
             services.RemoveAll<ICheckoutSessionMaintenance>();
             services.RemoveAll<CheckoutSessionService>();
             services.RemoveAll<CartSessionOptions>();
 
-            services.AddSingleton<IPricingVersionRepository, InMemoryPricingVersionRepository>();
+            services.AddDbContextFactory<CheckoutKataDbContext>(options =>
+                options.UseInMemoryDatabase(Guid.NewGuid().ToString("N")));
             services.AddSingleton(sessionOptions ?? new CartSessionOptions());
             services.AddSingleton<CheckoutSessionService>(serviceProvider =>
             {
-                var pricingRulesRepository = serviceProvider.GetRequiredService<IPricingVersionRepository>();
+                var dbContextFactory = serviceProvider.GetRequiredService<IDbContextFactory<CheckoutKataDbContext>>();
                 var options = serviceProvider.GetRequiredService<CartSessionOptions>();
                 return new CheckoutSessionService(
-                    pricingRulesRepository,
+                    dbContextFactory,
                     TimeProvider,
                     options);
             });

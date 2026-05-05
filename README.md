@@ -33,8 +33,7 @@ Default rules used in tests:
   - `PricingRuleValidator` constructor-time rule validation.
 
 - `CheckoutKata.Application`
-  - `IPricingVersionRepository` for versioned pricing data.
-  - `InMemoryPricingVersionRepository` memory-backed default implementation.
+  - `CheckoutKataDbContext` + EF Core InMemory-backed pricing version storage.
   - `ICheckoutSessionService` cart lifecycle orchestration with:
     - pinned `pricingVersionId`,
     - in-memory runtime cart state,
@@ -44,8 +43,8 @@ Default rules used in tests:
     - `Services/Carts` (checkout session service)
     - `Models/Carts` (session options + cart snapshot)
     - `Models/Pricing` (pricing version models)
-    - `Interfaces/Carts` and `Interfaces/Pricing` (interfaces/contracts)
-    - `Repositories/Pricing` (in-memory pricing repository)
+    - `Interfaces/Carts` (cart service contracts)
+    - `Persistence` (EF Core context + pricing entities/mappers)
     - `Exceptions` (application-specific error types)
 
 - `CheckoutKata.Api`
@@ -102,7 +101,7 @@ Commands:
 - Failed validation/write operations do not refresh cart TTL.
 - Cart clear operation is bodyless and version-agnostic.
 - Cart count is capacity-limited to guard in-memory growth.
-- Pricing data repository is swappable (memory now, DB-backed later).
+- Pricing version storage uses EF Core InMemory and is configured via `Checkout:PricingStore:DatabaseName` in API appsettings.
 
 Additional docs:
 - `docs/ASSUMPTIONS.md`

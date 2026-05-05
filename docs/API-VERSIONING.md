@@ -7,7 +7,7 @@ Checkout totals must remain stable during an active checkout session even if off
 ## Lifecycle
 
 1. Client creates cart: `POST /api/carts`.
-2. Service resolves the latest active pricing version from repository.
+2. Service resolves the latest active pricing version from EF Core InMemory pricing store.
 3. Cart is created with pinned `pricingVersionId`.
 4. All subsequent cart operations use pinned pricing version.
 5. Cart expires after 30 minutes of inactivity (sliding TTL).
