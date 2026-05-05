@@ -45,8 +45,10 @@ public sealed class Checkout(IReadOnlyCollection<PricingRule> pricingRules) : IC
             return rule.UnitPrice * count;
         }
 
-        return count >= rule.SpecialQuantity
-            ? rule.SpecialPrice.Value + ((count - rule.SpecialQuantity.Value) * rule.UnitPrice)
-            : count * rule.UnitPrice;
+        var specialQuantity = rule.SpecialQuantity.Value;
+        var specialApplications = count / specialQuantity;
+        var remainingItems = count % specialQuantity;
+
+        return (specialApplications * rule.SpecialPrice.Value) + (remainingItems * rule.UnitPrice);
     }
 }
