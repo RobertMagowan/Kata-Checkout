@@ -106,6 +106,71 @@ public class CheckoutTests
             Throws.TypeOf<ArgumentException>());
     }
 
+    [Test]
+    public void Constructor_WithDuplicateItemRules_ThrowsArgumentException()
+    {
+        var rules = new[]
+        {
+            new PricingRule("A", 50),
+            new PricingRule("A", 40)
+        };
+
+        Assert.That(
+            () => new Checkout(rules),
+            Throws.TypeOf<ArgumentException>());
+    }
+
+    [TestCase(0)]
+    [TestCase(-1)]
+    public void Constructor_WithNonPositiveUnitPrice_ThrowsArgumentException(int unitPrice)
+    {
+        var rules = new[] { new PricingRule("A", unitPrice) };
+
+        Assert.That(
+            () => new Checkout(rules),
+            Throws.TypeOf<ArgumentException>());
+    }
+
+    [Test]
+    public void Constructor_WithMissingSpecialPrice_ThrowsArgumentException()
+    {
+        var rules = new[] { new PricingRule("A", 50, 3, null) };
+
+        Assert.That(
+            () => new Checkout(rules),
+            Throws.TypeOf<ArgumentException>());
+    }
+
+    [Test]
+    public void Constructor_WithMissingSpecialQuantity_ThrowsArgumentException()
+    {
+        var rules = new[] { new PricingRule("A", 50, null, 130) };
+
+        Assert.That(
+            () => new Checkout(rules),
+            Throws.TypeOf<ArgumentException>());
+    }
+
+    [Test]
+    public void Constructor_WithNonPositiveSpecialQuantity_ThrowsArgumentException()
+    {
+        var rules = new[] { new PricingRule("A", 50, 0, 130) };
+
+        Assert.That(
+            () => new Checkout(rules),
+            Throws.TypeOf<ArgumentException>());
+    }
+
+    [Test]
+    public void Constructor_WithNonPositiveSpecialPrice_ThrowsArgumentException()
+    {
+        var rules = new[] { new PricingRule("A", 50, 3, 0) };
+
+        Assert.That(
+            () => new Checkout(rules),
+            Throws.TypeOf<ArgumentException>());
+    }
+
     private static ICheckout CreateCheckout()
     {
         var rules = new[]
