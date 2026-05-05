@@ -29,6 +29,20 @@ public class CheckoutTests
         Assert.That(totalPrice, Is.EqualTo(0));
     }
 
+    [Test]
+    public void GetTotalPrice_WithItemsScannedOutOfOrder_AppliesMatchingOffers()
+    {
+        var checkout = CreateCheckout();
+
+        checkout.Scan("B");
+        checkout.Scan("A");
+        checkout.Scan("B");
+
+        var totalPrice = checkout.GetTotalPrice();
+
+        Assert.That(totalPrice, Is.EqualTo(95));
+    }
+
     private static ICheckout CreateCheckout()
     {
         var rules = new[]
