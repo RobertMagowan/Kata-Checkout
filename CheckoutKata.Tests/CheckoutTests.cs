@@ -56,6 +56,19 @@ public class CheckoutTests
         Assert.That(totalPrice, Is.EqualTo(expectedTotal));
     }
 
+    [TestCase("BB", 45)]
+    [TestCase("BBBB", 90)]
+    public void GetTotalPrice_WithItemBSpecialOffer_AppliesOfferCorrectly(string basket, int expectedTotal)
+    {
+        var checkout = CreateCheckout();
+
+        ScanMany(checkout, basket);
+
+        var totalPrice = checkout.GetTotalPrice();
+
+        Assert.That(totalPrice, Is.EqualTo(expectedTotal));
+    }
+
     private static ICheckout CreateCheckout()
     {
         var rules = new[]
