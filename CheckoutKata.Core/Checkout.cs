@@ -1,14 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace CheckoutKata.Core;
 
-public sealed class Checkout(IReadOnlyCollection<PricingRule> pricingRules) : ICheckout
+public sealed class Checkout : ICheckout
 {
     private readonly Dictionary<string, int> _scannedItemCounts = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, PricingRule> _pricingRulesByItem = pricingRules
-        .ToDictionary(rule => rule.Item, StringComparer.Ordinal);
+    private readonly Dictionary<string, PricingRule> _pricingRulesByItem;
+
+    public Checkout(IReadOnlyCollection<PricingRule> pricingRules)
+    {
+        _pricingRulesByItem = PricingRuleValidator.ValidateAndBuildLookup(pricingRules);
+    }
 
     public void Scan(string item)
     {
