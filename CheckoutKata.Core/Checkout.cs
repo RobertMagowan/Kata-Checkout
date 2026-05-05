@@ -12,13 +12,15 @@ public sealed class Checkout(IReadOnlyCollection<PricingRule> pricingRules) : IC
 
     public void Scan(string item)
     {
-        if (_scannedItemCounts.TryGetValue(item, out var count))
+        var validatedItem = ItemValidator.ValidateScannedItem(item, _pricingRulesByItem);
+
+        if (_scannedItemCounts.TryGetValue(validatedItem, out var count))
         {
-            _scannedItemCounts[item] = count + 1;
+            _scannedItemCounts[validatedItem] = count + 1;
             return;
         }
 
-        _scannedItemCounts[item] = 1;
+        _scannedItemCounts[validatedItem] = 1;
     }
 
     public int GetTotalPrice()
