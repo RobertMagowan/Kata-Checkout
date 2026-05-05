@@ -17,7 +17,7 @@ internal static class BasketPricer
                 continue;
             }
 
-            totalPrice += CalculateItemPrice(rule, count);
+            totalPrice = checked(totalPrice + CalculateItemPrice(rule, count));
         }
 
         return totalPrice;
@@ -34,6 +34,6 @@ internal static class BasketPricer
         var specialApplications = count / specialQuantity;
         var remainingItems = count % specialQuantity;
 
-        return (specialApplications * rule.SpecialPrice.Value) + (remainingItems * rule.UnitPrice);
+        return checked((specialApplications * rule.SpecialPrice.Value) + (remainingItems * rule.UnitPrice));
     }
 }

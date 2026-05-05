@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace CheckoutKata.Core;
 
-public sealed class Checkout : ICheckout
+public sealed class Checkout : ICheckout, ICheckoutStateReader
 {
     private readonly Dictionary<string, int> _scannedItemCounts = new(StringComparer.Ordinal);
     private readonly Dictionary<string, PricingRule> _pricingRulesByItem;
@@ -38,14 +37,18 @@ public sealed class Checkout : ICheckout
         _scannedItemCounts.Clear();
     }
 
-    public IReadOnlyDictionary<string, int> GetScannedItemCounts()
+    public IReadOnlyList<ScannedItemCount> GetScannedItems()
     {
-        return new ReadOnlyDictionary<string, int>(
-            new Dictionary<string, int>(_scannedItemCounts, StringComparer.Ordinal));
+        return _scannedItemCounts
+            .OrderBy(itemCount => itemCount.Key, StringComparer.Ordinal)
+            .Select(itemCount => new ScannedItemCount(itemCount.Key, itemCount.Value))
+            .ToArray();
     }
 
-    public IReadOnlyCollection<PricingRule> GetPricingRules()
+    public IReadOnlyList<PricingRule> GetPricingRules()
     {
-        return _pricingRulesByItem.Values.ToArray();
+        return _pricingRulesByItem.Values
+            .OrderBy(rule => rule.Item, StringComparer.Ordinal)
+            .ToArray();
     }
 }

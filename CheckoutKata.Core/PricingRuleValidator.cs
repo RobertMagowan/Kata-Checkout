@@ -55,9 +55,9 @@ internal static class PricingRuleValidator
                 nameof(rule));
         }
 
-        if (hasSpecialQuantity && rule.SpecialQuantity!.Value <= 0)
+        if (hasSpecialQuantity && rule.SpecialQuantity!.Value <= 1)
         {
-            throw new ArgumentException("Special quantity must be greater than zero.", nameof(rule));
+            throw new ArgumentException("Special quantity must be greater than one.", nameof(rule));
         }
 
         if (hasSpecialPrice && rule.SpecialPrice!.Value <= 0)

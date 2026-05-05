@@ -44,7 +44,7 @@ public class CheckoutEndToEndTests
         {
             Assert.That(firstTotal, Is.EqualTo(175));
             Assert.That(secondTotal, Is.EqualTo(190));
-            Assert.That(checkout.GetScannedItemCounts().Count, Is.EqualTo(3));
+            Assert.That(checkout.GetScannedItems().Count, Is.EqualTo(3));
         });
     }
 
@@ -56,19 +56,21 @@ public class CheckoutEndToEndTests
         ScanMany(checkout, "BABA");
 
         var pricingRules = checkout.GetPricingRules();
-        var scannedItemCounts = checkout.GetScannedItemCounts();
+        var scannedItems = checkout.GetScannedItems();
+        var itemA = scannedItems.Single(item => item.Item == "A");
+        var itemB = scannedItems.Single(item => item.Item == "B");
 
         Assert.Multiple(() =>
         {
             Assert.That(pricingRules.Count, Is.EqualTo(4));
             Assert.That(pricingRules.Any(rule => rule.Item == "A" && rule.SpecialQuantity == 3 && rule.SpecialPrice == 130), Is.True);
             Assert.That(pricingRules.Any(rule => rule.Item == "B" && rule.SpecialQuantity == 2 && rule.SpecialPrice == 45), Is.True);
-            Assert.That(scannedItemCounts["A"], Is.EqualTo(2));
-            Assert.That(scannedItemCounts["B"], Is.EqualTo(2));
+            Assert.That(itemA.Quantity, Is.EqualTo(2));
+            Assert.That(itemB.Quantity, Is.EqualTo(2));
         });
     }
 
-    private static ICheckout CreateCheckout()
+    private static Checkout CreateCheckout()
     {
         var rules = new[]
         {

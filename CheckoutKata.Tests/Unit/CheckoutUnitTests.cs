@@ -90,14 +90,14 @@ public class CheckoutUnitTests
         checkout.Clear();
 
         var totalPrice = checkout.GetTotalPrice();
-        var scannedItemCounts = checkout.GetScannedItemCounts();
+        var scannedItems = checkout.GetScannedItems();
 
         Assert.That(totalPrice, Is.EqualTo(0));
-        Assert.That(scannedItemCounts, Is.Empty);
+        Assert.That(scannedItems, Is.Empty);
     }
 
     [Test]
-    public void GetScannedItemCounts_WithScannedItems_ReturnsAggregatedCounts()
+    public void GetScannedItems_WithScannedItems_ReturnsAggregatedCounts()
     {
         var checkout = CreateCheckout();
 
@@ -105,13 +105,15 @@ public class CheckoutUnitTests
         checkout.Scan("A");
         checkout.Scan("B");
 
-        var scannedItemCounts = checkout.GetScannedItemCounts();
+        var scannedItems = checkout.GetScannedItems();
+        var itemA = scannedItems.Single(item => item.Item == "A");
+        var itemB = scannedItems.Single(item => item.Item == "B");
 
         Assert.Multiple(() =>
         {
-            Assert.That(scannedItemCounts.Count, Is.EqualTo(2));
-            Assert.That(scannedItemCounts["A"], Is.EqualTo(1));
-            Assert.That(scannedItemCounts["B"], Is.EqualTo(2));
+            Assert.That(scannedItems.Count, Is.EqualTo(2));
+            Assert.That(itemA.Quantity, Is.EqualTo(1));
+            Assert.That(itemB.Quantity, Is.EqualTo(2));
         });
     }
 
@@ -212,11 +214,15 @@ public class CheckoutUnitTests
     [Test]
     public void Constructor_WithNonPositiveSpecialQuantity_ThrowsArgumentException()
     {
-        var rules = new[] { new PricingRule("A", 50, 0, 130) };
-
-        Assert.That(
-            () => new Checkout(rules),
-            Throws.TypeOf<ArgumentException>());
+        Assert.Multiple(() =>
+        {
+            Assert.That(
+                () => new Checkout(new[] { new PricingRule("A", 50, 0, 130) }),
+                Throws.TypeOf<ArgumentException>());
+            Assert.That(
+                () => new Checkout(new[] { new PricingRule("A", 50, 1, 130) }),
+                Throws.TypeOf<ArgumentException>());
+        });
     }
 
     [Test]
@@ -229,7 +235,7 @@ public class CheckoutUnitTests
             Throws.TypeOf<ArgumentException>());
     }
 
-    private static ICheckout CreateCheckout()
+    private static Checkout CreateCheckout()
     {
         var rules = new[]
         {
