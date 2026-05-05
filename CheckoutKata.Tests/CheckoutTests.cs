@@ -81,6 +81,31 @@ public class CheckoutTests
         Assert.That(totalPrice, Is.EqualTo(230));
     }
 
+    [Test]
+    public void Scan_WithNullItem_ThrowsArgumentNullException()
+    {
+        var checkout = CreateCheckout();
+
+        Assert.That(
+            () => checkout.Scan(null!),
+            Throws.TypeOf<ArgumentNullException>());
+    }
+
+    [TestCase("")]
+    [TestCase(" ")]
+    [TestCase("AA")]
+    [TestCase("a")]
+    [TestCase("1")]
+    [TestCase("E")]
+    public void Scan_WithInvalidItem_ThrowsArgumentException(string item)
+    {
+        var checkout = CreateCheckout();
+
+        Assert.That(
+            () => checkout.Scan(item),
+            Throws.TypeOf<ArgumentException>());
+    }
+
     private static ICheckout CreateCheckout()
     {
         var rules = new[]
