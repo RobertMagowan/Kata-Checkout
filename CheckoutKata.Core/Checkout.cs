@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace CheckoutKata.Core;
 
@@ -29,5 +31,21 @@ public sealed class Checkout : ICheckout
     public int GetTotalPrice()
     {
         return BasketPricer.CalculateTotalPrice(_scannedItemCounts, _pricingRulesByItem);
+    }
+
+    public void Clear()
+    {
+        _scannedItemCounts.Clear();
+    }
+
+    public IReadOnlyDictionary<string, int> GetScannedItemCounts()
+    {
+        return new ReadOnlyDictionary<string, int>(
+            new Dictionary<string, int>(_scannedItemCounts, StringComparer.Ordinal));
+    }
+
+    public IReadOnlyCollection<PricingRule> GetPricingRules()
+    {
+        return _pricingRulesByItem.Values.ToArray();
     }
 }
