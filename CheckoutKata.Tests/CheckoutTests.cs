@@ -82,6 +82,64 @@ public class CheckoutTests
     }
 
     [Test]
+    public void Clear_WithPreviouslyScannedItems_ResetsTotalAndScannedItems()
+    {
+        var checkout = CreateCheckout();
+
+        ScanMany(checkout, "AAABB");
+        checkout.Clear();
+
+        var totalPrice = checkout.GetTotalPrice();
+        var scannedItemCounts = checkout.GetScannedItemCounts();
+
+        Assert.That(totalPrice, Is.EqualTo(0));
+        Assert.That(scannedItemCounts, Is.Empty);
+    }
+
+    [Test]
+    public void GetScannedItemCounts_WithScannedItems_ReturnsAggregatedCounts()
+    {
+        var checkout = CreateCheckout();
+
+        checkout.Scan("B");
+        checkout.Scan("A");
+        checkout.Scan("B");
+
+        var scannedItemCounts = checkout.GetScannedItemCounts();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(scannedItemCounts.Count, Is.EqualTo(2));
+            Assert.That(scannedItemCounts["A"], Is.EqualTo(1));
+            Assert.That(scannedItemCounts["B"], Is.EqualTo(2));
+        });
+    }
+
+    [Test]
+    public void GetPricingRules_ReturnsConfiguredPricingRules()
+    {
+        var checkout = CreateCheckout();
+
+        var pricingRules = checkout.GetPricingRules();
+
+        var itemARule = pricingRules.Single(rule => rule.Item == "A");
+        var itemBRule = pricingRules.Single(rule => rule.Item == "B");
+        var itemCRule = pricingRules.Single(rule => rule.Item == "C");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(pricingRules.Count, Is.EqualTo(4));
+            Assert.That(itemARule.UnitPrice, Is.EqualTo(50));
+            Assert.That(itemARule.SpecialQuantity, Is.EqualTo(3));
+            Assert.That(itemARule.SpecialPrice, Is.EqualTo(130));
+            Assert.That(itemBRule.SpecialQuantity, Is.EqualTo(2));
+            Assert.That(itemBRule.SpecialPrice, Is.EqualTo(45));
+            Assert.That(itemCRule.SpecialQuantity, Is.Null);
+            Assert.That(itemCRule.SpecialPrice, Is.Null);
+        });
+    }
+
+    [Test]
     public void Scan_WithNullItem_ThrowsArgumentNullException()
     {
         var checkout = CreateCheckout();
