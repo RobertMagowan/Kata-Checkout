@@ -43,6 +43,19 @@ public class CheckoutTests
         Assert.That(totalPrice, Is.EqualTo(95));
     }
 
+    [TestCase("AAA", 130)]
+    [TestCase("AAAAAA", 260)]
+    public void GetTotalPrice_WithItemASpecialOffer_AppliesOfferCorrectly(string basket, int expectedTotal)
+    {
+        var checkout = CreateCheckout();
+
+        ScanMany(checkout, basket);
+
+        var totalPrice = checkout.GetTotalPrice();
+
+        Assert.That(totalPrice, Is.EqualTo(expectedTotal));
+    }
+
     private static ICheckout CreateCheckout()
     {
         var rules = new[]
@@ -54,5 +67,13 @@ public class CheckoutTests
         };
 
         return new Checkout(rules);
+    }
+
+    private static void ScanMany(ICheckout checkout, string basket)
+    {
+        foreach (var item in basket)
+        {
+            checkout.Scan(item.ToString());
+        }
     }
 }
