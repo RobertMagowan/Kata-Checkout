@@ -1,14 +1,12 @@
 namespace CheckoutKata.Core.Services;
 
-using CheckoutKata.Core.Interfaces;
-
+using Interfaces;
 using Models;
 
 public sealed class BasketPricer : IBasketPricer
 {
-    public int CalculateTotalPrice(
-        IReadOnlyCollection<ScannedItemCount> scannedItemCounts,
-        IReadOnlyDictionary<string, PricingRule> pricingRulesByItem)
+    public int CalculateTotalPrice(IReadOnlyCollection<ScannedItemCount> scannedItemCounts,
+                                   IReadOnlyDictionary<string, PricingRule> pricingRulesByItem)
     {
         ArgumentNullException.ThrowIfNull(scannedItemCounts);
         ArgumentNullException.ThrowIfNull(pricingRulesByItem);

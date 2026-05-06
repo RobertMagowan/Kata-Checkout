@@ -1,4 +1,3 @@
-using CheckoutKata.Core;
 using CheckoutKata.Console;
 using CheckoutKata.Core.Checkout;
 using CheckoutKata.Core.Models;
@@ -6,6 +5,7 @@ using CheckoutKata.Core.Services;
 using CheckoutKata.Core.Interfaces;
 
 IReadOnlyCollection<PricingRule> pricingRules;
+
 try
 {
     pricingRules = LoadPricingRules("pricing-rules.json");
@@ -16,7 +16,7 @@ catch (Exception ex)
     return;
 }
 
-ICheckout checkout = CreateCheckout(pricingRules);
+var checkout = CreateCheckout(pricingRules);
 
 Console.WriteLine("Checkout Kata Console");
 Console.WriteLine("Type 'help' for available commands.");
@@ -105,9 +105,7 @@ static void PrintRules(IEnumerable<PricingRule> rules)
             continue;
         }
 
-        var policyDescriptions = rule.DiscountPolicies
-            .Select(DescribePolicy)
-            .ToArray();
+        var policyDescriptions = rule.DiscountPolicies.Select(DescribePolicy).ToArray();
 
         Console.WriteLine($"- Item {rule.Item}: {rule.UnitPrice} [{string.Join(", ", policyDescriptions)}]");
     }
@@ -115,14 +113,7 @@ static void PrintRules(IEnumerable<PricingRule> rules)
 
 static string DescribePolicy(IDiscountPolicy policy)
 {
-    return policy switch
-    {
-        NForXDiscountPolicy nForXPolicy =>
-            $"{nForXPolicy.Type}(quantity={nForXPolicy.Quantity}, price={nForXPolicy.Price})",
-        PercentOffDiscountPolicy percentOffPolicy =>
-            $"{percentOffPolicy.Type}(percentage={percentOffPolicy.Percentage})",
-        _ => policy.Type
-    };
+    return policy.Type;
 }
 
 static void PrintHelp()
@@ -144,9 +135,7 @@ static IReadOnlyCollection<PricingRule> LoadPricingRules(string relativePath)
     var absolutePath = Path.Combine(AppContext.BaseDirectory, relativePath);
     if (!File.Exists(absolutePath))
     {
-        throw new FileNotFoundException(
-            $"Pricing rules file was not found at '{absolutePath}'.",
-            absolutePath);
+        throw new FileNotFoundException($"Pricing rules file was not found at '{absolutePath}'.", absolutePath);
     }
 
     var json = File.ReadAllText(absolutePath);
@@ -155,9 +144,5 @@ static IReadOnlyCollection<PricingRule> LoadPricingRules(string relativePath)
 
 static ICheckout CreateCheckout(IReadOnlyCollection<PricingRule> pricingRules)
 {
-    return new Checkout(
-        pricingRules,
-        new ItemValidator(),
-        new BasketPricer(),
-        new PricingRuleValidator());
+    return new Checkout(pricingRules, new ItemValidator(), new BasketPricer(), new PricingRuleValidator());
 }

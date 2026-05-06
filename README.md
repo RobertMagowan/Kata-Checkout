@@ -108,6 +108,7 @@ Commands:
 Additional docs:
 - `docs/ASSUMPTIONS.md`
 - `docs/API-VERSIONING.md`
+- `docs/CODING_STYLE.md`
 
 ## TDD and Commit Process
 

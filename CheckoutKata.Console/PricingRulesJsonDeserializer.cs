@@ -1,12 +1,24 @@
 namespace CheckoutKata.Console;
 
 using System.Text.Json;
-using CheckoutKata.Core.Interfaces;
-using CheckoutKata.Core.Models;
+using Core.Interfaces;
+using Core.Models;
+using Core.Policies;
 
 internal static class PricingRulesJsonDeserializer
 {
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
+    private static readonly IReadOnlyDictionary<string, Func<DiscountPolicyDto, IDiscountPolicy>> DiscountPolicyFactories =
+        new Dictionary<string, Func<DiscountPolicyDto, IDiscountPolicy>>(StringComparer.Ordinal)
+        {
+            ["n_for_x"] = policy => new NForXDiscountPolicy(GetRequiredParameter(policy, QuantityParameterName),
+                                                            GetRequiredParameter(policy, PriceParameterName),
+                                                            policy.Type),
+
+            ["percent_off"] = policy => new PercentOffDiscountPolicy(GetRequiredParameter(policy, PercentageParameterName),
+                                                                     policy.Type)
+        };
+
     private const string QuantityParameterName = "quantity";
     private const string PriceParameterName = "price";
     private const string PercentageParameterName = "percentage";
@@ -22,9 +34,7 @@ internal static class PricingRulesJsonDeserializer
             throw new ArgumentException("Pricing rules JSON must contain at least one rule.", nameof(json));
         }
 
-        return catalog.Rules
-            .Select(MapRule)
-            .ToArray();
+        return catalog.Rules.Select(MapRule).ToArray();
     }
 
     private static PricingRulesCatalogDto DeserializeCatalog(string json)
@@ -46,10 +56,7 @@ internal static class PricingRulesJsonDeserializer
 
         var discountPolicies = MapDiscountPolicies(rule.DiscountPolicies);
 
-        return new PricingRule(
-            rule.Item,
-            rule.UnitPrice,
-            discountPolicies);
+        return new PricingRule(rule.Item, rule.UnitPrice, discountPolicies);
     }
 
     private static IReadOnlyList<IDiscountPolicy>? MapDiscountPolicies(IReadOnlyList<DiscountPolicyDto>? policies)
@@ -59,9 +66,7 @@ internal static class PricingRulesJsonDeserializer
             return null;
         }
 
-        return policies
-            .Select(MapDiscountPolicy)
-            .ToArray();
+        return policies.Select(MapDiscountPolicy).ToArray();
     }
 
     private static IDiscountPolicy MapDiscountPolicy(DiscountPolicyDto policy)
@@ -70,48 +75,34 @@ internal static class PricingRulesJsonDeserializer
         ArgumentException.ThrowIfNullOrWhiteSpace(policy.Type);
 
         var normalizedType = policy.Type.Trim().ToLowerInvariant();
-        return normalizedType switch
+        if (DiscountPolicyFactories.TryGetValue(normalizedType, out var policyFactory))
         {
-            NForXDiscountPolicy.PolicyType => new NForXDiscountPolicy(
-                GetRequiredParameter(policy, QuantityParameterName),
-                GetRequiredParameter(policy, PriceParameterName)),
-            PercentOffDiscountPolicy.PolicyType => new PercentOffDiscountPolicy(
-                GetRequiredParameter(policy, PercentageParameterName)),
-            _ => throw new ArgumentException(
-                $"Unsupported discount policy type '{policy.Type}'.",
-                nameof(policy))
-        };
+            return policyFactory(policy);
+        }
+
+        throw new ArgumentException($"Unsupported discount policy type '{policy.Type}'.", nameof(policy));
     }
 
     private static int GetRequiredParameter(DiscountPolicyDto policy, string parameterName)
     {
         var parameters = policy.Parameters;
+
         if (parameters is null || parameters.Count == 0)
         {
-            throw new ArgumentException(
-                $"Policy '{policy.Type}' must define parameters.",
-                nameof(policy));
+            throw new ArgumentException($"Policy '{policy.Type}' must define parameters.", nameof(policy));
         }
 
         if (!parameters.TryGetValue(parameterName, out var value))
         {
-            throw new ArgumentException(
-                $"Policy '{policy.Type}' is missing required parameter '{parameterName}'.",
-                nameof(policy));
+            throw new ArgumentException($"Policy '{policy.Type}' is missing required parameter '{parameterName}'.", nameof(policy));
         }
 
         return value;
     }
 
-    private sealed record PricingRulesCatalogDto(
-        IReadOnlyList<PricingRuleDto> Rules);
+    private sealed record PricingRulesCatalogDto(IReadOnlyList<PricingRuleDto> Rules);
 
-    private sealed record PricingRuleDto(
-        string Item,
-        int UnitPrice,
-        IReadOnlyList<DiscountPolicyDto>? DiscountPolicies);
+    private sealed record PricingRuleDto(string Item, int UnitPrice, IReadOnlyList<DiscountPolicyDto>? DiscountPolicies);
 
-    private sealed record DiscountPolicyDto(
-        string Type,
-        Dictionary<string, int>? Parameters);
+    private sealed record DiscountPolicyDto(string Type, Dictionary<string, int>? Parameters);
 }
