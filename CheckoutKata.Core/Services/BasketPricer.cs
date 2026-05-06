@@ -14,7 +14,7 @@ internal sealed class BasketPricer : IBasketPricer
         {
             if (!pricingRulesByItem.TryGetValue(item, out var rule))
             {
-                continue;
+                throw new InvalidOperationException($"No pricing rule found for scanned item '{item}'.");
             }
 
             totalPrice = checked(totalPrice + CalculateItemPrice(rule, count));
@@ -27,7 +27,7 @@ internal sealed class BasketPricer : IBasketPricer
     {
         if (rule.SpecialQuantity is null || rule.SpecialPrice is null)
         {
-            return rule.UnitPrice * count;
+            return checked(rule.UnitPrice * count);
         }
 
         var specialQuantity = rule.SpecialQuantity.Value;

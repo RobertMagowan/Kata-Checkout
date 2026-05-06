@@ -32,6 +32,14 @@ public class CheckoutValidationTests
     }
 
     [Test]
+    public void Constructor_WithNoRules_ThrowsArgumentException()
+    {
+        Assert.That(
+            () => new global::CheckoutKata.Core.Checkout(Array.Empty<PricingRule>()),
+            Throws.TypeOf<ArgumentException>());
+    }
+
+    [Test]
     public void Constructor_WithDuplicateItemRules_ThrowsArgumentException()
     {
         var rules = new[]
@@ -136,6 +144,3 @@ public class CheckoutValidationTests
         return new global::CheckoutKata.Core.Checkout(rules);
     }
 }
-
-
-

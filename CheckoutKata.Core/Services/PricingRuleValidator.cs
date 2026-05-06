@@ -9,6 +9,11 @@ internal sealed class PricingRuleValidator : IPricingRuleValidator
     {
         ArgumentNullException.ThrowIfNull(pricingRules);
 
+        if (pricingRules.Count == 0)
+        {
+            throw new ArgumentException("At least one pricing rule is required.", nameof(pricingRules));
+        }
+
         var pricingRulesByItem = new Dictionary<string, PricingRule>(StringComparer.Ordinal);
 
         foreach (var rule in pricingRules)

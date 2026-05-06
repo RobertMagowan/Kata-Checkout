@@ -41,7 +41,7 @@ public sealed class Checkout : ICheckout, ICheckoutStateReader
 
         if (_scannedItemCounts.TryGetValue(validatedItem, out var count))
         {
-            _scannedItemCounts[validatedItem] = count + 1;
+            _scannedItemCounts[validatedItem] = checked(count + 1);
             return;
         }
 
