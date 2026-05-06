@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace CheckoutKata.Core;
 
-internal static class ItemValidator
+internal sealed class ItemValidator : IScannedItemValidator
 {
-    public static string ValidateScannedItem(
+    public string ValidateScannedItem(
         string item,
         IReadOnlyDictionary<string, PricingRule> pricingRulesByItem)
     {

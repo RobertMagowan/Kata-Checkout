@@ -2,9 +2,9 @@ using System.Collections.Generic;
 
 namespace CheckoutKata.Core;
 
-internal static class BasketPricer
+internal sealed class BasketPricer : IBasketPricer
 {
-    public static int CalculateTotalPrice(
+    public int CalculateTotalPrice(
         IReadOnlyDictionary<string, int> scannedItemCounts,
         IReadOnlyDictionary<string, PricingRule> pricingRulesByItem)
     {

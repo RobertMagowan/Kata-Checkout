@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace CheckoutKata.Core;
 
-internal static class PricingRuleValidator
+internal sealed class PricingRuleValidator : IPricingRuleValidator
 {
-    public static Dictionary<string, PricingRule> ValidateAndBuildLookup(IReadOnlyCollection<PricingRule> pricingRules)
+    public IReadOnlyDictionary<string, PricingRule> ValidateAndBuildLookup(IReadOnlyCollection<PricingRule> pricingRules)
     {
         ArgumentNullException.ThrowIfNull(pricingRules);
 

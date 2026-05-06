@@ -7,16 +7,37 @@ namespace CheckoutKata.Core;
 public sealed class Checkout : ICheckout, ICheckoutStateReader
 {
     private readonly Dictionary<string, int> _scannedItemCounts = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, PricingRule> _pricingRulesByItem;
+    private readonly IReadOnlyDictionary<string, PricingRule> _pricingRulesByItem;
+    private readonly IScannedItemValidator _itemValidator;
+    private readonly IBasketPricer _basketPricer;
 
     public Checkout(IReadOnlyCollection<PricingRule> pricingRules)
+        : this(
+            pricingRules,
+            new PricingRuleValidator(),
+            new ItemValidator(),
+            new BasketPricer())
     {
-        _pricingRulesByItem = PricingRuleValidator.ValidateAndBuildLookup(pricingRules);
+    }
+
+    internal Checkout(
+        IReadOnlyCollection<PricingRule> pricingRules,
+        IPricingRuleValidator pricingRuleValidator,
+        IScannedItemValidator itemValidator,
+        IBasketPricer basketPricer)
+    {
+        ArgumentNullException.ThrowIfNull(pricingRuleValidator);
+        ArgumentNullException.ThrowIfNull(itemValidator);
+        ArgumentNullException.ThrowIfNull(basketPricer);
+
+        _pricingRulesByItem = pricingRuleValidator.ValidateAndBuildLookup(pricingRules);
+        _itemValidator = itemValidator;
+        _basketPricer = basketPricer;
     }
 
     public void Scan(string item)
     {
-        var validatedItem = ItemValidator.ValidateScannedItem(item, _pricingRulesByItem);
+        var validatedItem = _itemValidator.ValidateScannedItem(item, _pricingRulesByItem);
 
         if (_scannedItemCounts.TryGetValue(validatedItem, out var count))
         {
@@ -29,7 +50,7 @@ public sealed class Checkout : ICheckout, ICheckoutStateReader
 
     public int GetTotalPrice()
     {
-        return BasketPricer.CalculateTotalPrice(_scannedItemCounts, _pricingRulesByItem);
+        return _basketPricer.CalculateTotalPrice(_scannedItemCounts, _pricingRulesByItem);
     }
 
     public void Clear()
