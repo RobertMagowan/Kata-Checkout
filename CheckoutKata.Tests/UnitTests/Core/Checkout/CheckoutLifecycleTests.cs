@@ -27,6 +27,22 @@ public class CheckoutLifecycleTests
         Assert.That(scannedItems, Is.Empty);
     }
 
+    [Test]
+    public void Clear_WhenCalledMultipleTimes_RemainsSafeAndKeepsBasketEmpty()
+    {
+        var checkout = CreateCheckout();
+
+        ScanMany(checkout, "ABCD");
+        checkout.Clear();
+        checkout.Clear();
+
+        var totalPrice = checkout.GetTotalPrice();
+        var scannedItems = checkout.GetScannedItems();
+
+        Assert.That(totalPrice, Is.EqualTo(0));
+        Assert.That(scannedItems, Is.Empty);
+    }
+
     private static Checkout CreateCheckout()
     {
         return new Checkout(CreateDefaultRules(), new ItemValidator(), new BasketPricer(), new PricingRuleValidator());

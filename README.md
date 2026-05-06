@@ -4,20 +4,19 @@ A `.NET 10` implementation of the supermarket checkout kata using:
 - test-first development (TDD),
 - clean code,
 - SOLID/SRP-aligned design,
-- lightweight clean architecture,
-- version-pinned pricing for dual Blazor/API clients.
+- lightweight clean architecture.
 
 ## Problem Summary
 
-Items are scanned one at a time. Each Item has a unit price, and some Items have special prices (for example, `3 for 130`).  
+Items are scanned one at a time. Each Item has a unit price, and some Items have discount policies (for example, `3 for 130`).  
 The checkout must:
 - accept Items in any order,
-- apply special prices as many times as eligible,
+- apply discount policies correctly,
 - compute the correct total.
 
-Default rules used in tests:
-- Item `A`: 50, special `3 for 130`
-- Item `B`: 30, special `2 for 45`
+Default console rules (from `CheckoutKata.Console/pricing-rules.json`):
+- Item `A`: 50, `n_for_x` (`quantity=3`, `price=130`)
+- Item `B`: 30, `n_for_x` (`quantity=2`, `price=45`)
 - Item `C`: 20
 - Item `D`: 15
 
@@ -33,33 +32,17 @@ Default rules used in tests:
   - `BasketPricer` default pricing implementation.
   - `ItemValidator` default scan input validation implementation.
   - `PricingRuleValidator` constructor-time rule validation.
-
-- `CheckoutKata.Application`
-  - `CheckoutKataDbContext` + EF Core InMemory-backed pricing version storage.
-  - `ICheckoutSessionService` cart lifecycle orchestration with:
-    - pinned `pricingVersionId`,
-    - in-memory runtime cart state,
-    - sliding TTL expiry.
-  - `ICheckoutSessionMaintenance` for cart eviction and active-cart metrics.
-  - Folder layout:
-    - `Services/Carts` (checkout session service)
-    - `Models/Carts` (session options + cart snapshot)
-    - `Models/Pricing` (pricing version models)
-    - `Interfaces/Carts` (cart service contracts)
-    - `Persistence` (EF Core context + pricing entities/mappers)
-    - `Exceptions` (application-specific error types)
-
-- `CheckoutKata.Api`
-  - Controller-based REST API for cart creation, scanning, clearing, and snapshots.
-  - Boundary normalization (`Trim + ToUpperInvariant`) before domain scan operations.
-  - Standardized `ProblemDetails` error responses (`400`, `404`, `409`, `429`).
-  - Background cart eviction hosted service (sweep interval configurable via session options).
-
-- `CheckoutKata.Tests`
-  - Unit, application, and API integration coverage.
+  - Policy implementations:
+    - `NForXDiscountPolicy`
+    - `PercentOffDiscountPolicy`
 
 - `CheckoutKata.Console`
   - Interactive REPL for manual verification.
+  - JSON rule deserialization for data-driven pricing policy configuration.
+
+- `CheckoutKata.Tests`
+  - NUnit unit tests for `CheckoutKata.Core` behaviors.
+  - Coverlet coverage configuration focused on `CheckoutKata.Core`.
 
 ## Build and Test
 
@@ -69,12 +52,6 @@ From repository root:
 dotnet restore
 dotnet build
 dotnet test
-```
-
-Run API:
-
-```powershell
-dotnet run --project .\CheckoutKata.Api\CheckoutKata.Api.csproj
 ```
 
 ## Run Console App
@@ -95,19 +72,17 @@ Commands:
 ## Design Notes
 
 - Monetary values are represented as integers (kata style).
-- Core item format is strictly one uppercase alphabetic character.
+- Core item format is one uppercase alphabetic character (`char.IsLetter` + `char.IsUpper`).
 - Invalid scan inputs throw exceptions in the Core library.
-- Pricing rules are versioned and pinned to cart at creation time.
-- New pricing versions affect new carts only; active carts keep pinned version.
-- Cart runtime state is in-memory and expires after sliding 30 minutes.
-- Failed validation/write operations do not refresh cart TTL.
-- Cart clear operation is bodyless and version-agnostic.
-- Cart count is capacity-limited to guard in-memory growth.
-- Pricing version storage uses EF Core InMemory and is configured via `Checkout:PricingStore:DatabaseName` in API appsettings.
+- `Checkout` is stateful and non-idempotent (`Scan` increments basket quantity per call).
+- Discount policies are evaluated per item and the lowest total for that item is selected (no discount stacking).
+- Arithmetic is guarded using `checked` to fail fast on overflow.
+- Core does not normalize input casing; callers must supply valid item codes.
+- `Clear` is treated as idempotent behavior.
+- Mixed baskets can use different discount policy types per item, and each item still selects its own best single policy.
 
 Additional docs:
 - `docs/ASSUMPTIONS.md`
-- `docs/API-VERSIONING.md`
 - `docs/CODING_STYLE.md`
 
 ## TDD and Commit Process

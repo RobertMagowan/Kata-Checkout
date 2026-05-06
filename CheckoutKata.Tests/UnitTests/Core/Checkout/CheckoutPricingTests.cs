@@ -105,6 +105,33 @@ public class CheckoutPricingTests
     }
 
     [Test]
+    public void GetTotalPrice_WithMixedItemsUsingDifferentPolicyTypes_AppliesBestPolicyPerItem()
+    {
+        var checkout = CreateCheckout([
+                                          new PricingRule(
+                                                          "A",
+                                                          100,
+                                                          DiscountPolicies:
+                                                          [
+                                                              new NForXDiscountPolicy(3, 250)
+                                                          ]),
+                                          new PricingRule(
+                                                          "B",
+                                                          50,
+                                                          DiscountPolicies:
+                                                          [
+                                                              new PercentOffDiscountPolicy(20)
+                                                          ])
+                                      ]);
+
+        ScanMany(checkout, "AAABBB");
+
+        var totalPrice = checkout.GetTotalPrice();
+
+        Assert.That(totalPrice, Is.EqualTo(370));
+    }
+
+    [Test]
     public void GetTotalPrice_WithNForXAndPercentPolicies_SelectsSingleBestDiscount()
     {
         var checkout = CreateCheckout([
@@ -144,6 +171,49 @@ public class CheckoutPricingTests
         var totalPrice = checkout.GetTotalPrice();
 
         Assert.That(totalPrice, Is.EqualTo(200));
+    }
+
+    [Test]
+    public void GetTotalPrice_WithWorseDiscountPolicy_FallsBackToBasePrice()
+    {
+        var checkout = CreateCheckout([
+                                          new PricingRule(
+                                                          "A",
+                                                          100,
+                                                          DiscountPolicies:
+                                                          [
+                                                              new NForXDiscountPolicy(3, 320)
+                                                          ])
+                                      ]);
+
+        ScanMany(checkout, "AAA");
+
+        var totalPrice = checkout.GetTotalPrice();
+
+        Assert.That(totalPrice, Is.EqualTo(300));
+    }
+
+    [TestCase("AAAAAA", 450)]
+    [TestCase("AAAAAAAAAA", 700)]
+    public void GetTotalPrice_WithMultipleNForXPolicies_SelectsBestDiscount(string basket, int expectedTotal)
+    {
+        var checkout = CreateCheckout([
+                                          new PricingRule(
+                                                          "A",
+                                                          100,
+                                                          DiscountPolicies:
+                                                          [
+                                                              new NForXDiscountPolicy(2, 170),
+                                                              new NForXDiscountPolicy(3, 240),
+                                                              new NForXDiscountPolicy(5, 350)
+                                                          ])
+                                      ]);
+
+        ScanMany(checkout, basket);
+
+        var totalPrice = checkout.GetTotalPrice();
+
+        Assert.That(totalPrice, Is.EqualTo(expectedTotal));
     }
 
     [Test]

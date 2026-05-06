@@ -136,6 +136,46 @@ public class CheckoutValidationTests
         Assert.That(() => new PercentOffDiscountPolicy(0), Throws.TypeOf<ArgumentException>());
     }
 
+    [Test]
+    public void NForXDiscountPolicy_CalculatePrice_WithNegativeItemCount_ThrowsArgumentException()
+    {
+        var policy = new NForXDiscountPolicy(3, 130);
+
+        Assert.That(() => policy.CalculatePrice(-1, 50), Throws.TypeOf<ArgumentException>());
+    }
+
+    [Test]
+    public void NForXDiscountPolicy_CalculatePrice_WithNonPositiveUnitPrice_ThrowsArgumentException()
+    {
+        var policy = new NForXDiscountPolicy(3, 130);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(() => policy.CalculatePrice(3, 0), Throws.TypeOf<ArgumentException>());
+            Assert.That(() => policy.CalculatePrice(3, -1), Throws.TypeOf<ArgumentException>());
+        });
+    }
+
+    [Test]
+    public void PercentOffDiscountPolicy_CalculatePrice_WithNegativeItemCount_ThrowsArgumentException()
+    {
+        var policy = new PercentOffDiscountPolicy(20);
+
+        Assert.That(() => policy.CalculatePrice(-1, 50), Throws.TypeOf<ArgumentException>());
+    }
+
+    [Test]
+    public void PercentOffDiscountPolicy_CalculatePrice_WithNonPositiveUnitPrice_ThrowsArgumentException()
+    {
+        var policy = new PercentOffDiscountPolicy(20);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(() => policy.CalculatePrice(3, 0), Throws.TypeOf<ArgumentException>());
+            Assert.That(() => policy.CalculatePrice(3, -1), Throws.TypeOf<ArgumentException>());
+        });
+    }
+
     private static Checkout CreateCheckout()
     {
         return CreateCheckout(CreateDefaultRules());
