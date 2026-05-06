@@ -85,12 +85,13 @@ public class CheckoutPricingTests
     }
 
     [Test]
-    public void GetTotalPrice_WithCustomCheckoutEngine_UsesInjectedEngineCalculation()
+    public void GetTotalPrice_WithCustomBasketPricer_UsesInjectedPricingPolicy()
     {
-        var checkoutEngine = new FixedTotalCheckoutEngine(999);
+        var basketPricer = new FixedTotalBasketPricer(999);
         var checkout = new global::CheckoutKata.Core.Checkout(
             new[] { new PricingRule("A", 50) },
-            checkoutEngine);
+            new ItemValidator(),
+            basketPricer);
 
         checkout.Scan("A");
 
@@ -99,34 +100,17 @@ public class CheckoutPricingTests
         Assert.Multiple(() =>
         {
             Assert.That(totalPrice, Is.EqualTo(999));
-            Assert.That(checkoutEngine.CalculateTotalPriceCallCount, Is.EqualTo(1));
+            Assert.That(basketPricer.CalculateTotalPriceCallCount, Is.EqualTo(1));
         });
     }
 
-    private sealed class FixedTotalCheckoutEngine(int totalPrice) : ICheckoutEngine
+    private sealed class FixedTotalBasketPricer(int totalPrice) : IBasketPricer
     {
         public int CalculateTotalPriceCallCount { get; private set; }
 
-        public IReadOnlyDictionary<string, PricingRule> BuildPricingRulesLookup(IReadOnlyCollection<PricingRule> pricingRules)
-        {
-            return pricingRules.ToDictionary(rule => rule.Item, StringComparer.Ordinal);
-        }
-
-        public string ValidateScannedItem(
-            string item,
-            IReadOnlyDictionary<string, PricingRule> pricingRulesByItem)
-        {
-            if (!pricingRulesByItem.ContainsKey(item))
-            {
-                throw new ArgumentException("Unknown item.", nameof(item));
-            }
-
-            return item;
-        }
-
         public int CalculateTotalPrice(
-            IReadOnlyDictionary<string, int> scannedItemCounts,
-            IReadOnlyDictionary<string, PricingRule> pricingRulesByItem)
+            IReadOnlyCollection<ScannedItemCount> scannedItemCounts,
+            IReadOnlyCollection<PricingRule> pricingRules)
         {
             CalculateTotalPriceCallCount++;
             return totalPrice;

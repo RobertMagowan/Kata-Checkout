@@ -1,17 +1,26 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CheckoutKata.Core;
 
-internal sealed class BasketPricer : IBasketPricer
+public sealed class BasketPricer : IBasketPricer
 {
     public int CalculateTotalPrice(
-        IReadOnlyDictionary<string, int> scannedItemCounts,
-        IReadOnlyDictionary<string, PricingRule> pricingRulesByItem)
+        IReadOnlyCollection<ScannedItemCount> scannedItemCounts,
+        IReadOnlyCollection<PricingRule> pricingRules)
     {
+        ArgumentNullException.ThrowIfNull(scannedItemCounts);
+        ArgumentNullException.ThrowIfNull(pricingRules);
+
+        var pricingRulesByItem = pricingRules
+            .ToDictionary(rule => rule.Item, StringComparer.Ordinal);
         var totalPrice = 0;
 
-        foreach (var (item, count) in scannedItemCounts)
+        foreach (var scannedItem in scannedItemCounts)
         {
+            var item = scannedItem.Item;
+            var count = scannedItem.Quantity;
+
             if (!pricingRulesByItem.TryGetValue(item, out var rule))
             {
                 throw new InvalidOperationException($"No pricing rule found for scanned item '{item}'.");

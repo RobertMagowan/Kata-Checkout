@@ -40,12 +40,22 @@ public class CheckoutValidationTests
     }
 
     [Test]
-    public void Constructor_WithNullCheckoutEngine_ThrowsArgumentNullException()
+    public void Constructor_WithNullScannedItemValidator_ThrowsArgumentNullException()
     {
         var rules = new[] { new PricingRule("A", 50) };
 
         Assert.That(
-            () => new global::CheckoutKata.Core.Checkout(rules, null!),
+            () => new global::CheckoutKata.Core.Checkout(rules, null!, new BasketPricer()),
+            Throws.TypeOf<ArgumentNullException>());
+    }
+
+    [Test]
+    public void Constructor_WithNullBasketPricer_ThrowsArgumentNullException()
+    {
+        var rules = new[] { new PricingRule("A", 50) };
+
+        Assert.That(
+            () => new global::CheckoutKata.Core.Checkout(rules, new ItemValidator(), null!),
             Throws.TypeOf<ArgumentNullException>());
     }
 

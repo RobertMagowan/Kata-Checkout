@@ -8,25 +8,52 @@ public sealed class Checkout : ICheckout, ICheckoutStateReader
 {
     private readonly Dictionary<string, int> _scannedItemCounts = new(StringComparer.Ordinal);
     private readonly IReadOnlyDictionary<string, PricingRule> _pricingRulesByItem;
-    private readonly ICheckoutEngine _checkoutEngine;
+    private readonly IScannedItemValidator _itemValidator;
+    private readonly IBasketPricer _basketPricer;
+    private readonly IReadOnlyList<PricingRule> _pricingRules;
 
     public Checkout(IReadOnlyCollection<PricingRule> pricingRules)
-        : this(pricingRules, CreateDefaultEngine())
+        : this(
+            pricingRules,
+            new ItemValidator(),
+            new BasketPricer(),
+            new PricingRuleValidator())
     {
     }
 
     public Checkout(
         IReadOnlyCollection<PricingRule> pricingRules,
-        ICheckoutEngine checkoutEngine)
+        IScannedItemValidator itemValidator,
+        IBasketPricer basketPricer)
+        : this(
+            pricingRules,
+            itemValidator,
+            basketPricer,
+            new PricingRuleValidator())
     {
-        _checkoutEngine = checkoutEngine ?? throw new ArgumentNullException(nameof(checkoutEngine));
+    }
 
-        _pricingRulesByItem = _checkoutEngine.BuildPricingRulesLookup(pricingRules);
+    internal Checkout(
+        IReadOnlyCollection<PricingRule> pricingRules,
+        IScannedItemValidator itemValidator,
+        IBasketPricer basketPricer,
+        IPricingRuleValidator pricingRuleValidator)
+    {
+        ArgumentNullException.ThrowIfNull(itemValidator);
+        ArgumentNullException.ThrowIfNull(basketPricer);
+        ArgumentNullException.ThrowIfNull(pricingRuleValidator);
+
+        _pricingRulesByItem = pricingRuleValidator.ValidateAndBuildLookup(pricingRules);
+        _pricingRules = _pricingRulesByItem.Values
+            .OrderBy(rule => rule.Item, StringComparer.Ordinal)
+            .ToArray();
+        _itemValidator = itemValidator;
+        _basketPricer = basketPricer;
     }
 
     public void Scan(string item)
     {
-        var validatedItem = _checkoutEngine.ValidateScannedItem(item, _pricingRulesByItem);
+        var validatedItem = _itemValidator.ValidateScannedItem(item, _pricingRules);
 
         if (_scannedItemCounts.TryGetValue(validatedItem, out var count))
         {
@@ -39,7 +66,11 @@ public sealed class Checkout : ICheckout, ICheckoutStateReader
 
     public int GetTotalPrice()
     {
-        return _checkoutEngine.CalculateTotalPrice(_scannedItemCounts, _pricingRulesByItem);
+        var scannedItemCounts = _scannedItemCounts
+            .Select(itemCount => new ScannedItemCount(itemCount.Key, itemCount.Value))
+            .ToArray();
+
+        return _basketPricer.CalculateTotalPrice(scannedItemCounts, _pricingRules);
     }
 
     public void Clear()
@@ -57,16 +88,6 @@ public sealed class Checkout : ICheckout, ICheckoutStateReader
 
     public IReadOnlyList<PricingRule> GetPricingRules()
     {
-        return _pricingRulesByItem.Values
-            .OrderBy(rule => rule.Item, StringComparer.Ordinal)
-            .ToArray();
-    }
-
-    private static ICheckoutEngine CreateDefaultEngine()
-    {
-        return new DefaultCheckoutEngine(
-            new PricingRuleValidator(),
-            new ItemValidator(),
-            new BasketPricer());
+        return _pricingRules;
     }
 }
