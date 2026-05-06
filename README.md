@@ -85,12 +85,4 @@ Additional docs:
 - `docs/ASSUMPTIONS.md`
 - `docs/CODING_STYLE.md`
 
-## TDD and Commit Process
 
-The repository history is intentionally granular to show red/green/refactor progression:
-- scaffold,
-- failing tests,
-- minimal implementations,
-- validation hardening,
-- console harness,
-- documentation finalization.
