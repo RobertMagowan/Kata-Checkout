@@ -8,15 +8,8 @@ using Core.Policies;
 internal static class PricingRulesJsonDeserializer
 {
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
-    private static readonly IReadOnlyDictionary<string, Func<DiscountPolicyDto, IDiscountPolicy>> DiscountPolicyFactories =
-        new Dictionary<string, Func<DiscountPolicyDto, IDiscountPolicy>>(StringComparer.Ordinal)
-        {
-            ["n_for_x"] = policy => new NForXDiscountPolicy(GetRequiredParameter(policy, QuantityParameterName),
-                                                            GetRequiredParameter(policy, PriceParameterName)),
-
-            ["percent_off"] = policy => new PercentOffDiscountPolicy(GetRequiredParameter(policy, PercentageParameterName))
-        };
-
+    private const string NForXPolicyType = "n_for_x";
+    private const string PercentOffPolicyType = "percent_off";
     private const string QuantityParameterName = "quantity";
     private const string PriceParameterName = "price";
     private const string PercentageParameterName = "percentage";
@@ -73,34 +66,30 @@ internal static class PricingRulesJsonDeserializer
         ArgumentException.ThrowIfNullOrWhiteSpace(policy.Type);
 
         var normalizedType = policy.Type.Trim().ToLowerInvariant();
-        if (DiscountPolicyFactories.TryGetValue(normalizedType, out var policyFactory))
+        if (normalizedType == NForXPolicyType)
         {
-            return policyFactory(policy);
+            return new NForXDiscountPolicy(GetRequiredParameter(policy.Quantity, policy, QuantityParameterName),
+                                           GetRequiredParameter(policy.Price, policy, PriceParameterName));
         }
 
-        throw new ArgumentException($"Unsupported discount policy type '{policy.Type}'.", nameof(policy));
+        if (normalizedType == PercentOffPolicyType)
+        {
+            return new PercentOffDiscountPolicy(GetRequiredParameter(policy.Percentage, policy, PercentageParameterName));
+        }
+
+        throw new ArgumentException($"Unsupported discount policy type '{policy.Type}'.");
     }
 
-    private static int GetRequiredParameter(DiscountPolicyDto policy, string parameterName)
+    private static int GetRequiredParameter(int? value, DiscountPolicyDto policy, string parameterName)
     {
-        var parameters = policy.Parameters;
+        if (!value.HasValue) throw new ArgumentException($"Policy '{policy.Type}' is missing required parameter '{parameterName}'.");
 
-        if (parameters is null || parameters.Count == 0)
-        {
-            throw new ArgumentException($"Policy '{policy.Type}' must define parameters.", nameof(policy));
-        }
-
-        if (!parameters.TryGetValue(parameterName, out var value))
-        {
-            throw new ArgumentException($"Policy '{policy.Type}' is missing required parameter '{parameterName}'.", nameof(policy));
-        }
-
-        return value;
+        return value.Value;
     }
 
     private sealed record PricingRulesCatalogDto(IReadOnlyList<PricingRuleDto> Rules);
 
     private sealed record PricingRuleDto(string Item, int UnitPrice, IReadOnlyList<DiscountPolicyDto>? DiscountPolicies);
 
-    private sealed record DiscountPolicyDto(string Type, Dictionary<string, int>? Parameters);
+    private sealed record DiscountPolicyDto(string Type, int? Quantity, int? Price, int? Percentage);
 }

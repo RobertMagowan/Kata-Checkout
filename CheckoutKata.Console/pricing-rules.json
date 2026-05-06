@@ -6,10 +6,8 @@
       "discountPolicies": [
         {
           "type": "n_for_x",
-          "parameters": {
-            "quantity": 3,
-            "price": 130
-          }
+          "quantity": 3,
+          "price": 130
         }
       ]
     },
@@ -19,10 +17,8 @@
       "discountPolicies": [
         {
           "type": "n_for_x",
-          "parameters": {
-            "quantity": 2,
-            "price": 45
-          }
+          "quantity": 2,
+          "price": 45
         }
       ]
     },

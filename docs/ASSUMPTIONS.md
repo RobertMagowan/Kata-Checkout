@@ -22,5 +22,5 @@ The following assumptions reflect the current repository state (`CheckoutKata.Co
 18. Console pricing rules are loaded from `pricing-rules.json` at startup.
 19. Console deserializer currently supports policy types `n_for_x` and `percent_off`.
 20. Console policy type matching is case-insensitive after normalization.
-21. Console policy parameter keys are case-sensitive and expected as `quantity`, `price`, `percentage`.
+21. Console policy parameters are flattened per policy object (`quantity`, `price`, `percentage`) and are deserialized using web defaults (case-insensitive property matching).
 22. Test coverage gate targets `CheckoutKata.Core` with minimum 95% line coverage when `EnforceCoverageGate=true`.
