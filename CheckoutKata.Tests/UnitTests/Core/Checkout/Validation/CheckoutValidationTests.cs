@@ -40,6 +40,16 @@ public class CheckoutValidationTests
     }
 
     [Test]
+    public void Constructor_WithNullCheckoutEngine_ThrowsArgumentNullException()
+    {
+        var rules = new[] { new PricingRule("A", 50) };
+
+        Assert.That(
+            () => new global::CheckoutKata.Core.Checkout(rules, null!),
+            Throws.TypeOf<ArgumentNullException>());
+    }
+
+    [Test]
     public void Constructor_WithDuplicateItemRules_ThrowsArgumentException()
     {
         var rules = new[]

@@ -8,36 +8,25 @@ public sealed class Checkout : ICheckout, ICheckoutStateReader
 {
     private readonly Dictionary<string, int> _scannedItemCounts = new(StringComparer.Ordinal);
     private readonly IReadOnlyDictionary<string, PricingRule> _pricingRulesByItem;
-    private readonly IScannedItemValidator _itemValidator;
-    private readonly IBasketPricer _basketPricer;
+    private readonly ICheckoutEngine _checkoutEngine;
 
     public Checkout(IReadOnlyCollection<PricingRule> pricingRules)
-        : this(
-            pricingRules,
-            new PricingRuleValidator(),
-            new ItemValidator(),
-            new BasketPricer())
+        : this(pricingRules, CreateDefaultEngine())
     {
     }
 
-    internal Checkout(
+    public Checkout(
         IReadOnlyCollection<PricingRule> pricingRules,
-        IPricingRuleValidator pricingRuleValidator,
-        IScannedItemValidator itemValidator,
-        IBasketPricer basketPricer)
+        ICheckoutEngine checkoutEngine)
     {
-        ArgumentNullException.ThrowIfNull(pricingRuleValidator);
-        ArgumentNullException.ThrowIfNull(itemValidator);
-        ArgumentNullException.ThrowIfNull(basketPricer);
+        _checkoutEngine = checkoutEngine ?? throw new ArgumentNullException(nameof(checkoutEngine));
 
-        _pricingRulesByItem = pricingRuleValidator.ValidateAndBuildLookup(pricingRules);
-        _itemValidator = itemValidator;
-        _basketPricer = basketPricer;
+        _pricingRulesByItem = _checkoutEngine.BuildPricingRulesLookup(pricingRules);
     }
 
     public void Scan(string item)
     {
-        var validatedItem = _itemValidator.ValidateScannedItem(item, _pricingRulesByItem);
+        var validatedItem = _checkoutEngine.ValidateScannedItem(item, _pricingRulesByItem);
 
         if (_scannedItemCounts.TryGetValue(validatedItem, out var count))
         {
@@ -50,7 +39,7 @@ public sealed class Checkout : ICheckout, ICheckoutStateReader
 
     public int GetTotalPrice()
     {
-        return _basketPricer.CalculateTotalPrice(_scannedItemCounts, _pricingRulesByItem);
+        return _checkoutEngine.CalculateTotalPrice(_scannedItemCounts, _pricingRulesByItem);
     }
 
     public void Clear()
@@ -71,5 +60,13 @@ public sealed class Checkout : ICheckout, ICheckoutStateReader
         return _pricingRulesByItem.Values
             .OrderBy(rule => rule.Item, StringComparer.Ordinal)
             .ToArray();
+    }
+
+    private static ICheckoutEngine CreateDefaultEngine()
+    {
+        return new DefaultCheckoutEngine(
+            new PricingRuleValidator(),
+            new ItemValidator(),
+            new BasketPricer());
     }
 }

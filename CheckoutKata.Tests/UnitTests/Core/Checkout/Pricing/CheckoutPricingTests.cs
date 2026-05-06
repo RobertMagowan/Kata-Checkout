@@ -1,4 +1,5 @@
 using CheckoutKata.Tests.Shared.Core;
+using CheckoutKata.Core;
 
 namespace CheckoutKata.Tests.UnitTests.Core.Checkout.Pricing;
 
@@ -81,6 +82,55 @@ public class CheckoutPricingTests
         var totalPrice = checkout.GetTotalPrice();
 
         Assert.That(totalPrice, Is.EqualTo(230));
+    }
+
+    [Test]
+    public void GetTotalPrice_WithCustomCheckoutEngine_UsesInjectedEngineCalculation()
+    {
+        var checkoutEngine = new FixedTotalCheckoutEngine(999);
+        var checkout = new global::CheckoutKata.Core.Checkout(
+            new[] { new PricingRule("A", 50) },
+            checkoutEngine);
+
+        checkout.Scan("A");
+
+        var totalPrice = checkout.GetTotalPrice();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(totalPrice, Is.EqualTo(999));
+            Assert.That(checkoutEngine.CalculateTotalPriceCallCount, Is.EqualTo(1));
+        });
+    }
+
+    private sealed class FixedTotalCheckoutEngine(int totalPrice) : ICheckoutEngine
+    {
+        public int CalculateTotalPriceCallCount { get; private set; }
+
+        public IReadOnlyDictionary<string, PricingRule> BuildPricingRulesLookup(IReadOnlyCollection<PricingRule> pricingRules)
+        {
+            return pricingRules.ToDictionary(rule => rule.Item, StringComparer.Ordinal);
+        }
+
+        public string ValidateScannedItem(
+            string item,
+            IReadOnlyDictionary<string, PricingRule> pricingRulesByItem)
+        {
+            if (!pricingRulesByItem.ContainsKey(item))
+            {
+                throw new ArgumentException("Unknown item.", nameof(item));
+            }
+
+            return item;
+        }
+
+        public int CalculateTotalPrice(
+            IReadOnlyDictionary<string, int> scannedItemCounts,
+            IReadOnlyDictionary<string, PricingRule> pricingRulesByItem)
+        {
+            CalculateTotalPriceCallCount++;
+            return totalPrice;
+        }
     }
 }
 

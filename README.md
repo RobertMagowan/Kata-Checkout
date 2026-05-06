@@ -26,7 +26,8 @@ Default rules used in tests:
 - `CheckoutKata.Core`
   - `ICheckout` minimal contract (`Scan`, `GetTotalPrice`, `Clear`).
   - `ICheckoutStateReader` typed snapshot reads (`GetScannedItems`, `GetPricingRules`).
-  - `Checkout` orchestration + scan state.
+  - `ICheckoutEngine` extension point for rule lookup, scan validation, and total calculation.
+  - `Checkout` orchestration + scan state (defaulting to `DefaultCheckoutEngine`).
   - `PricingRule` immutable rule model (`Item` naming only).
   - `BasketPricer` pure pricing calculation.
   - `ItemValidator` fail-fast scan input validation.
