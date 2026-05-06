@@ -136,35 +136,6 @@ public class CheckoutValidationTests
         Assert.That(() => new PercentOffDiscountPolicy(0), Throws.TypeOf<ArgumentException>());
     }
 
-    [Test]
-    public void NForXDiscountPolicy_WithoutExplicitType_UsesDefaultType()
-    {
-        var policy = new NForXDiscountPolicy(3, 130);
-
-        Assert.That(policy.Type, Is.EqualTo("n_for_x"));
-    }
-
-    [Test]
-    public void PercentOffDiscountPolicy_WithoutExplicitType_UsesDefaultType()
-    {
-        var policy = new PercentOffDiscountPolicy(20);
-
-        Assert.That(policy.Type, Is.EqualTo("percent_off"));
-    }
-
-    [Test]
-    public void DiscountPolicies_WithExplicitType_NormalizeTypeValue()
-    {
-        var nForXPolicy = new NForXDiscountPolicy(3, 130, " N_FOR_X ");
-        var percentOffPolicy = new PercentOffDiscountPolicy(20, " Percent_Off ");
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(nForXPolicy.Type, Is.EqualTo("n_for_x"));
-            Assert.That(percentOffPolicy.Type, Is.EqualTo("percent_off"));
-        });
-    }
-
     private static Checkout CreateCheckout()
     {
         return CreateCheckout(CreateDefaultRules());

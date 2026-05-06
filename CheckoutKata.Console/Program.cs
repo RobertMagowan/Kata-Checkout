@@ -113,7 +113,34 @@ static void PrintRules(IEnumerable<PricingRule> rules)
 
 static string DescribePolicy(IDiscountPolicy policy)
 {
-    return policy.Type;
+    ArgumentNullException.ThrowIfNull(policy);
+
+    var policyClassName = policy.GetType().Name;
+    var policyName = policyClassName.EndsWith("DiscountPolicy", StringComparison.Ordinal)
+        ? policyClassName[..^"DiscountPolicy".Length]
+        : policyClassName;
+
+    return ConvertPascalToSnakeCase(policyName);
+}
+
+static string ConvertPascalToSnakeCase(string value)
+{
+    ArgumentException.ThrowIfNullOrWhiteSpace(value);
+
+    var builder = new System.Text.StringBuilder(value.Length + 8);
+
+    for (var index = 0; index < value.Length; index++)
+    {
+        var character = value[index];
+        if (char.IsUpper(character) && index > 0)
+        {
+            builder.Append('_');
+        }
+
+        builder.Append(char.ToLowerInvariant(character));
+    }
+
+    return builder.ToString();
 }
 
 static void PrintHelp()

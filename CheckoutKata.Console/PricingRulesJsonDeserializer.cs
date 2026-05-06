@@ -12,11 +12,9 @@ internal static class PricingRulesJsonDeserializer
         new Dictionary<string, Func<DiscountPolicyDto, IDiscountPolicy>>(StringComparer.Ordinal)
         {
             ["n_for_x"] = policy => new NForXDiscountPolicy(GetRequiredParameter(policy, QuantityParameterName),
-                                                            GetRequiredParameter(policy, PriceParameterName),
-                                                            policy.Type),
+                                                            GetRequiredParameter(policy, PriceParameterName)),
 
-            ["percent_off"] = policy => new PercentOffDiscountPolicy(GetRequiredParameter(policy, PercentageParameterName),
-                                                                     policy.Type)
+            ["percent_off"] = policy => new PercentOffDiscountPolicy(GetRequiredParameter(policy, PercentageParameterName))
         };
 
     private const string QuantityParameterName = "quantity";
