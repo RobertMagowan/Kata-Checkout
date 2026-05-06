@@ -108,20 +108,8 @@ public class CheckoutPricingTests
     public void GetTotalPrice_WithMixedItemsUsingDifferentPolicyTypes_AppliesBestPolicyPerItem()
     {
         var checkout = CreateCheckout([
-                                          new PricingRule(
-                                                          "A",
-                                                          100,
-                                                          DiscountPolicies:
-                                                          [
-                                                              new NForXDiscountPolicy(3, 250)
-                                                          ]),
-                                          new PricingRule(
-                                                          "B",
-                                                          50,
-                                                          DiscountPolicies:
-                                                          [
-                                                              new PercentOffDiscountPolicy(20)
-                                                          ])
+                                          new PricingRule("A", 100, DiscountPolicies: [new NForXDiscountPolicy(3, 250)]),
+                                          new PricingRule("B", 50, DiscountPolicies: [new PercentOffDiscountPolicy(20)])
                                       ]);
 
         ScanMany(checkout, "AAABBB");
@@ -135,14 +123,10 @@ public class CheckoutPricingTests
     public void GetTotalPrice_WithNForXAndPercentPolicies_SelectsSingleBestDiscount()
     {
         var checkout = CreateCheckout([
-                                          new PricingRule(
-                                                          "A",
-                                                          100,
-                                                          DiscountPolicies:
-                                                          [
-                                                              new NForXDiscountPolicy(3, 250),
-                                                              new PercentOffDiscountPolicy(20)
-                                                          ])
+                                          new PricingRule("A", 100, DiscountPolicies: [ 
+                                                                                          new NForXDiscountPolicy(3, 250),
+                                                                                          new PercentOffDiscountPolicy(20)
+                                                                                      ])
                                       ]);
 
         ScanMany(checkout, "AAA");
@@ -156,14 +140,10 @@ public class CheckoutPricingTests
     public void GetTotalPrice_WithNForXAndPercentPolicies_DoesNotStackDiscounts()
     {
         var checkout = CreateCheckout([
-                                          new PricingRule(
-                                                          "A",
-                                                          100,
-                                                          DiscountPolicies:
-                                                          [
-                                                              new NForXDiscountPolicy(3, 200),
-                                                              new PercentOffDiscountPolicy(20)
-                                                          ])
+                                          new PricingRule("A", 100, DiscountPolicies: [
+                                                                                          new NForXDiscountPolicy(3, 200),
+                                                                                          new PercentOffDiscountPolicy(20)
+                                                                                      ])
                                       ]);
 
         ScanMany(checkout, "AAA");
@@ -177,13 +157,9 @@ public class CheckoutPricingTests
     public void GetTotalPrice_WithWorseDiscountPolicy_FallsBackToBasePrice()
     {
         var checkout = CreateCheckout([
-                                          new PricingRule(
-                                                          "A",
-                                                          100,
-                                                          DiscountPolicies:
-                                                          [
-                                                              new NForXDiscountPolicy(3, 320)
-                                                          ])
+                                          new PricingRule("A", 100, DiscountPolicies: [
+                                                                                          new NForXDiscountPolicy(3, 320)
+                                                                                      ])
                                       ]);
 
         ScanMany(checkout, "AAA");
@@ -198,15 +174,11 @@ public class CheckoutPricingTests
     public void GetTotalPrice_WithMultipleNForXPolicies_SelectsBestDiscount(string basket, int expectedTotal)
     {
         var checkout = CreateCheckout([
-                                          new PricingRule(
-                                                          "A",
-                                                          100,
-                                                          DiscountPolicies:
-                                                          [
-                                                              new NForXDiscountPolicy(2, 170),
-                                                              new NForXDiscountPolicy(3, 240),
-                                                              new NForXDiscountPolicy(5, 350)
-                                                          ])
+                                          new PricingRule("A", 100, DiscountPolicies: [
+                                                                                          new NForXDiscountPolicy(2, 170),
+                                                                                          new NForXDiscountPolicy(3, 240),
+                                                                                          new NForXDiscountPolicy(5, 350)
+                                                                                      ])
                                       ]);
 
         ScanMany(checkout, basket);

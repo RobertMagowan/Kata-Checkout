@@ -1,6 +1,6 @@
 namespace CheckoutKata.Core.Checkout;
 
-using CheckoutKata.Core.Interfaces;
+using Interfaces;
 using Models;
 
 public sealed class Checkout : ICheckout, ICheckoutStateReader
