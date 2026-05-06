@@ -60,13 +60,14 @@ public class CheckoutPricingSafetyTests
     private static void RemovePricingRuleViaReflection(global::CheckoutKata.Core.Checkout.Checkout checkout, string item)
     {
         var field = typeof(global::CheckoutKata.Core.Checkout.Checkout)
-            .GetField("_pricingRules", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            .GetField("_pricingRulesByItem", BindingFlags.Instance | BindingFlags.NonPublic)!;
 
-        var pricingRules = ((IReadOnlyList<PricingRule>)field.GetValue(checkout)!)
-            .Where(rule => rule.Item != item)
-            .ToArray();
+        var pricingRulesByItem = (IReadOnlyDictionary<string, PricingRule>)field.GetValue(checkout)!;
+        var updatedLookup = pricingRulesByItem
+            .Where(pair => pair.Key != item)
+            .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
 
-        field.SetValue(checkout, pricingRules);
+        field.SetValue(checkout, updatedLookup);
     }
 
     private static void SetScannedCountViaReflection(global::CheckoutKata.Core.Checkout.Checkout checkout, string item, int count)

@@ -177,7 +177,7 @@ public class CheckoutPricingTests
 
         public int CalculateTotalPrice(
             IReadOnlyCollection<ScannedItemCount> scannedItemCounts,
-            IReadOnlyCollection<PricingRule> pricingRules)
+            IReadOnlyDictionary<string, PricingRule> pricingRulesByItem)
         {
             CalculateTotalPriceCallCount++;
             return totalPrice;

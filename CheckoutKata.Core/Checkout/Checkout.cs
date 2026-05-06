@@ -2,14 +2,13 @@ namespace CheckoutKata.Core.Checkout;
 
 using CheckoutKata.Core.Interfaces;
 using Models;
-using Services;
 
 public sealed class Checkout : ICheckout, ICheckoutStateReader
 {
     private readonly Dictionary<string, int> _scannedItemCounts = new(StringComparer.Ordinal);
     private readonly IScannedItemValidator _itemValidator;
     private readonly IBasketPricer _basketPricer;
-    private readonly IReadOnlyList<PricingRule> _pricingRules;
+    private readonly IReadOnlyDictionary<string, PricingRule> _pricingRulesByItem;
 
     public Checkout(IReadOnlyCollection<PricingRule> pricingRules, IScannedItemValidator itemValidator,
                     IBasketPricer basketPricer, IPricingRuleValidator pricingRuleValidator)
@@ -19,17 +18,15 @@ public sealed class Checkout : ICheckout, ICheckoutStateReader
         ArgumentNullException.ThrowIfNull(pricingRuleValidator);
         ArgumentNullException.ThrowIfNull(pricingRules);
 
-        _pricingRules = pricingRuleValidator.ValidateAndBuildLookup(pricingRules)
-                                            .Values
-                                            .OrderBy(rule => rule.Item, StringComparer.Ordinal)
-                                            .ToArray();
+        pricingRuleValidator.Validate(pricingRules);
+        _pricingRulesByItem = pricingRules.ToDictionary(rule => rule.Item, StringComparer.Ordinal);
         _itemValidator = itemValidator;
         _basketPricer = basketPricer;
     }
 
     public void Scan(string item)
     {
-        var validatedItem = _itemValidator.ValidateScannedItem(item, _pricingRules);
+        var validatedItem = _itemValidator.ValidateScannedItem(item, _pricingRulesByItem);
 
         if (_scannedItemCounts.TryGetValue(validatedItem, out var count))
         {
@@ -45,7 +42,7 @@ public sealed class Checkout : ICheckout, ICheckoutStateReader
         var scannedItemCounts = _scannedItemCounts.Select(itemCount => new ScannedItemCount(itemCount.Key, itemCount.Value))
                                                   .ToArray();
 
-        return _basketPricer.CalculateTotalPrice(scannedItemCounts, _pricingRules);
+        return _basketPricer.CalculateTotalPrice(scannedItemCounts, _pricingRulesByItem);
     }
 
     public void Clear() { _scannedItemCounts.Clear(); }
@@ -57,5 +54,10 @@ public sealed class Checkout : ICheckout, ICheckoutStateReader
                                  .ToArray();
     }
 
-    public IReadOnlyList<PricingRule> GetPricingRules() { return _pricingRules; }
+    public IReadOnlyList<PricingRule> GetPricingRules()
+    {
+        return _pricingRulesByItem.Values
+                                  .OrderBy(rule => rule.Item, StringComparer.Ordinal)
+                                  .ToArray();
+    }
 }

@@ -2,13 +2,13 @@ namespace CheckoutKata.Core.Services;
 
 using System;
 using System.Collections.Generic;
-using CheckoutKata.Core.Interfaces;
+using Interfaces;
 
 using Models;
 
 public sealed class PricingRuleValidator : IPricingRuleValidator
 {
-    public IReadOnlyDictionary<string, PricingRule> ValidateAndBuildLookup(IReadOnlyCollection<PricingRule> pricingRules)
+    public void Validate(IReadOnlyCollection<PricingRule> pricingRules)
     {
         ArgumentNullException.ThrowIfNull(pricingRules);
 
@@ -17,21 +17,17 @@ public sealed class PricingRuleValidator : IPricingRuleValidator
             throw new ArgumentException("At least one pricing rule is required.", nameof(pricingRules));
         }
 
-        var pricingRulesByItem = new Dictionary<string, PricingRule>(StringComparer.Ordinal);
+        var itemSet = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var rule in pricingRules)
         {
             ValidateRule(rule);
 
-            if (!pricingRulesByItem.TryAdd(rule.Item, rule))
+            if (!itemSet.Add(rule.Item))
             {
-                throw new ArgumentException(
-                    $"Duplicate pricing rule detected for item '{rule.Item}'.",
-                    nameof(pricingRules));
+                throw new ArgumentException($"Duplicate pricing rule detected for item '{rule.Item}'.", nameof(pricingRules));
             }
         }
-
-        return pricingRulesByItem;
     }
 
     private static void ValidateRule(PricingRule rule)

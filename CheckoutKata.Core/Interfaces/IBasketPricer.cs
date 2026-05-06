@@ -6,5 +6,5 @@ using Models;
 public interface IBasketPricer
 {
     int CalculateTotalPrice(IReadOnlyCollection<ScannedItemCount> scannedItemCounts,
-                            IReadOnlyCollection<PricingRule> pricingRules);
+                            IReadOnlyDictionary<string, PricingRule> pricingRulesByItem);
 }

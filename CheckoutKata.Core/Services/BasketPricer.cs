@@ -6,12 +6,12 @@ using Models;
 
 public sealed class BasketPricer : IBasketPricer
 {
-    public int CalculateTotalPrice(IReadOnlyCollection<ScannedItemCount> scannedItemCounts, IReadOnlyCollection<PricingRule> pricingRules)
+    public int CalculateTotalPrice(
+        IReadOnlyCollection<ScannedItemCount> scannedItemCounts,
+        IReadOnlyDictionary<string, PricingRule> pricingRulesByItem)
     {
         ArgumentNullException.ThrowIfNull(scannedItemCounts);
-        ArgumentNullException.ThrowIfNull(pricingRules);
-
-        var pricingRulesByItem = pricingRules.ToDictionary(rule => rule.Item, StringComparer.Ordinal);
+        ArgumentNullException.ThrowIfNull(pricingRulesByItem);
         var totalPrice = 0;
 
         foreach (var scannedItem in scannedItemCounts)

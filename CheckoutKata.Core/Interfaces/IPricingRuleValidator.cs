@@ -4,5 +4,5 @@ using Models;
 
 public interface IPricingRuleValidator
 {
-    IReadOnlyDictionary<string, PricingRule> ValidateAndBuildLookup(IReadOnlyCollection<PricingRule> pricingRules);
+    void Validate(IReadOnlyCollection<PricingRule> pricingRules);
 }
