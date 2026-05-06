@@ -1,6 +1,9 @@
 using CheckoutKata.Tests.Shared.Core;
+using CheckoutKata.Core;
 
 namespace CheckoutKata.Tests.EndToEndTests.Core.Checkout;
+
+using CheckoutKata.Core.Models;
 
 [Category("Core")]
 [Category("EndToEnd")]
@@ -65,8 +68,18 @@ public class CheckoutEndToEndTests
         Assert.Multiple(() =>
         {
             Assert.That(pricingRules.Count, Is.EqualTo(4));
-            Assert.That(pricingRules.Any(rule => rule.Item == "A" && rule.SpecialQuantity == 3 && rule.SpecialPrice == 130), Is.True);
-            Assert.That(pricingRules.Any(rule => rule.Item == "B" && rule.SpecialQuantity == 2 && rule.SpecialPrice == 45), Is.True);
+            Assert.That(
+                pricingRules.Any(rule =>
+                    rule.Item == "A" &&
+                    rule.DiscountPolicies is { Count: 1 } &&
+                    rule.DiscountPolicies[0] is NForXDiscountPolicy { Quantity: 3, Price: 130 }),
+                Is.True);
+            Assert.That(
+                pricingRules.Any(rule =>
+                    rule.Item == "B" &&
+                    rule.DiscountPolicies is { Count: 1 } &&
+                    rule.DiscountPolicies[0] is NForXDiscountPolicy { Quantity: 2, Price: 45 }),
+                Is.True);
             Assert.That(itemA.Quantity, Is.EqualTo(2));
             Assert.That(itemB.Quantity, Is.EqualTo(2));
         });

@@ -1,9 +1,12 @@
+namespace CheckoutKata.Core.Services;
+
 using System;
 using System.Collections.Generic;
+using CheckoutKata.Core.Interfaces;
 
-namespace CheckoutKata.Core;
+using Models;
 
-internal sealed class PricingRuleValidator : IPricingRuleValidator
+public sealed class PricingRuleValidator : IPricingRuleValidator
 {
     public IReadOnlyDictionary<string, PricingRule> ValidateAndBuildLookup(IReadOnlyCollection<PricingRule> pricingRules)
     {
@@ -50,24 +53,14 @@ internal sealed class PricingRuleValidator : IPricingRuleValidator
             throw new ArgumentException("Unit price must be greater than zero.", nameof(rule));
         }
 
-        var hasSpecialQuantity = rule.SpecialQuantity.HasValue;
-        var hasSpecialPrice = rule.SpecialPrice.HasValue;
-
-        if (hasSpecialQuantity != hasSpecialPrice)
+        if (rule.DiscountPolicies is null || rule.DiscountPolicies.Count == 0)
         {
-            throw new ArgumentException(
-                "Special quantity and special price must both be supplied together.",
-                nameof(rule));
+            return;
         }
 
-        if (hasSpecialQuantity && rule.SpecialQuantity!.Value <= 1)
+        foreach (var policy in rule.DiscountPolicies)
         {
-            throw new ArgumentException("Special quantity must be greater than one.", nameof(rule));
-        }
-
-        if (hasSpecialPrice && rule.SpecialPrice!.Value <= 0)
-        {
-            throw new ArgumentException("Special price must be greater than zero.", nameof(rule));
+            ArgumentNullException.ThrowIfNull(policy);
         }
     }
 }

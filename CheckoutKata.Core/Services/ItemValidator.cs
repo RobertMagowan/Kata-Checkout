@@ -1,14 +1,15 @@
+namespace CheckoutKata.Core.Services;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CheckoutKata.Core.Interfaces;
 
-namespace CheckoutKata.Core;
+using Models;
 
 public sealed class ItemValidator : IScannedItemValidator
 {
-    public string ValidateScannedItem(
-        string item,
-        IReadOnlyCollection<PricingRule> pricingRules)
+    public string ValidateScannedItem(string item, IReadOnlyCollection<PricingRule> pricingRules)
     {
         ArgumentNullException.ThrowIfNull(item);
         ArgumentNullException.ThrowIfNull(pricingRules);
@@ -28,7 +29,7 @@ public sealed class ItemValidator : IScannedItemValidator
             throw new ArgumentException("Item must be a single uppercase letter.", nameof(item));
         }
 
-        if (!pricingRules.Any(rule => rule.Item == item))
+        if (pricingRules.All(rule => rule.Item != item))
         {
             throw new ArgumentException($"No pricing rule exists for item '{item}'.", nameof(item));
         }

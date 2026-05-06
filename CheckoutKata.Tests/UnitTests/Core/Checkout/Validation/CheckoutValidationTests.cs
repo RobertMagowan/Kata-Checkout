@@ -1,6 +1,10 @@
 using CheckoutKata.Core;
+using CheckoutKata.Tests.Shared.Core;
 
 namespace CheckoutKata.Tests.UnitTests.Core.Checkout.Validation;
+
+using CheckoutKata.Core.Models;
+using CheckoutKata.Core.Services;
 
 [Category("Core")]
 [Category("Validation")]
@@ -35,7 +39,7 @@ public class CheckoutValidationTests
     public void Constructor_WithNoRules_ThrowsArgumentException()
     {
         Assert.That(
-            () => new global::CheckoutKata.Core.Checkout(Array.Empty<PricingRule>()),
+            () => CreateCheckout(Array.Empty<PricingRule>()),
             Throws.TypeOf<ArgumentException>());
     }
 
@@ -45,7 +49,11 @@ public class CheckoutValidationTests
         var rules = new[] { new PricingRule("A", 50) };
 
         Assert.That(
-            () => new global::CheckoutKata.Core.Checkout(rules, null!, new BasketPricer()),
+            () => new global::CheckoutKata.Core.Checkout.Checkout(
+                                                                   rules,
+                                                                   null!,
+                                                                   new BasketPricer(),
+                                                                   new PricingRuleValidator()),
             Throws.TypeOf<ArgumentNullException>());
     }
 
@@ -55,7 +63,11 @@ public class CheckoutValidationTests
         var rules = new[] { new PricingRule("A", 50) };
 
         Assert.That(
-            () => new global::CheckoutKata.Core.Checkout(rules, new ItemValidator(), null!),
+            () => new global::CheckoutKata.Core.Checkout.Checkout(
+                                                                   rules,
+                                                                   new ItemValidator(),
+                                                                   null!,
+                                                                   new PricingRuleValidator()),
             Throws.TypeOf<ArgumentNullException>());
     }
 
@@ -69,7 +81,7 @@ public class CheckoutValidationTests
         };
 
         Assert.That(
-            () => new global::CheckoutKata.Core.Checkout(rules),
+            () => CreateCheckout(rules),
             Throws.TypeOf<ArgumentException>());
     }
 
@@ -79,7 +91,7 @@ public class CheckoutValidationTests
         var rules = new PricingRule[] { null! };
 
         Assert.That(
-            () => new global::CheckoutKata.Core.Checkout(rules),
+            () => CreateCheckout(rules),
             Throws.TypeOf<ArgumentNullException>());
     }
 
@@ -92,7 +104,7 @@ public class CheckoutValidationTests
         var rules = new[] { new PricingRule(item, 50) };
 
         Assert.That(
-            () => new global::CheckoutKata.Core.Checkout(rules),
+            () => CreateCheckout(rules),
             Throws.TypeOf<ArgumentException>());
     }
 
@@ -103,64 +115,95 @@ public class CheckoutValidationTests
         var rules = new[] { new PricingRule("A", unitPrice) };
 
         Assert.That(
-            () => new global::CheckoutKata.Core.Checkout(rules),
+            () => CreateCheckout(rules),
             Throws.TypeOf<ArgumentException>());
     }
 
     [Test]
-    public void Constructor_WithMissingSpecialPrice_ThrowsArgumentException()
+    public void NForXDiscountPolicy_WithInvalidQuantity_ThrowsArgumentException()
     {
-        var rules = new[] { new PricingRule("A", 50, 3, null) };
-
         Assert.That(
-            () => new global::CheckoutKata.Core.Checkout(rules),
+            () => new NForXDiscountPolicy(1, 130),
             Throws.TypeOf<ArgumentException>());
     }
 
     [Test]
-    public void Constructor_WithMissingSpecialQuantity_ThrowsArgumentException()
+    public void NForXDiscountPolicy_WithInvalidPrice_ThrowsArgumentException()
     {
-        var rules = new[] { new PricingRule("A", 50, null, 130) };
-
         Assert.That(
-            () => new global::CheckoutKata.Core.Checkout(rules),
+            () => new NForXDiscountPolicy(3, 0),
             Throws.TypeOf<ArgumentException>());
     }
 
     [Test]
-    public void Constructor_WithNonPositiveSpecialQuantity_ThrowsArgumentException()
+    public void Constructor_WithNonPositiveNForXPolicyQuantity_ThrowsArgumentException()
     {
         Assert.Multiple(() =>
         {
             Assert.That(
-                () => new global::CheckoutKata.Core.Checkout(new[] { new PricingRule("A", 50, 0, 130) }),
+                () => CreateCheckout(
+                    [
+                        CheckoutCoreTestData.CreateNForXRule("A", 50, 0, 130)
+                    ]),
                 Throws.TypeOf<ArgumentException>());
             Assert.That(
-                () => new global::CheckoutKata.Core.Checkout(new[] { new PricingRule("A", 50, 1, 130) }),
+                () => CreateCheckout(
+                    [
+                        CheckoutCoreTestData.CreateNForXRule("A", 50, 1, 130)
+                    ]),
                 Throws.TypeOf<ArgumentException>());
         });
     }
 
     [Test]
-    public void Constructor_WithNonPositiveSpecialPrice_ThrowsArgumentException()
+    public void Constructor_WithNonPositiveNForXPolicyPrice_ThrowsArgumentException()
     {
-        var rules = new[] { new PricingRule("A", 50, 3, 0) };
-
         Assert.That(
-            () => new global::CheckoutKata.Core.Checkout(rules),
+            () => CreateCheckout(
+                [
+                    CheckoutCoreTestData.CreateNForXRule("A", 50, 3, 0)
+                ]),
             Throws.TypeOf<ArgumentException>());
     }
 
-    private static global::CheckoutKata.Core.Checkout CreateCheckout()
+    [Test]
+    public void Constructor_WithNullDiscountPolicy_ThrowsArgumentNullException()
     {
         var rules = new[]
         {
-            new PricingRule("A", 50, 3, 130),
-            new PricingRule("B", 30, 2, 45),
-            new PricingRule("C", 20),
-            new PricingRule("D", 15)
+            new PricingRule(
+                "A",
+                50,
+                DiscountPolicies:
+                [
+                    null!
+                ])
         };
 
-        return new global::CheckoutKata.Core.Checkout(rules);
+        Assert.That(
+            () => CreateCheckout(rules),
+            Throws.TypeOf<ArgumentNullException>());
+    }
+
+    [Test]
+    public void Constructor_WithInvalidPercentOffDiscountPolicy_ThrowsArgumentException()
+    {
+        Assert.That(
+            () => new PercentOffDiscountPolicy(0),
+            Throws.TypeOf<ArgumentException>());
+    }
+
+    private static global::CheckoutKata.Core.Checkout.Checkout CreateCheckout()
+    {
+        return CreateCheckout(CheckoutCoreTestData.CreateDefaultRules());
+    }
+
+    private static global::CheckoutKata.Core.Checkout.Checkout CreateCheckout(IReadOnlyCollection<PricingRule> pricingRules)
+    {
+        return new global::CheckoutKata.Core.Checkout.Checkout(
+                                                               pricingRules,
+                                                               new ItemValidator(),
+                                                               new BasketPricer(),
+                                                               new PricingRuleValidator());
     }
 }

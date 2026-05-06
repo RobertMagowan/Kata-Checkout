@@ -1,7 +1,10 @@
 using System.Reflection;
 using CheckoutKata.Core;
+using CheckoutKata.Tests.Shared.Core;
 
 namespace CheckoutKata.Tests.UnitTests.Core.Checkout.Pricing;
+
+using CheckoutKata.Core.Models;
 
 [Category("Core")]
 [Category("Pricing")]
@@ -10,7 +13,7 @@ public class CheckoutPricingSafetyTests
     [Test]
     public void GetTotalPrice_WhenUnitPriceMultiplicationOverflows_ThrowsOverflowException()
     {
-        var checkout = new global::CheckoutKata.Core.Checkout(new[]
+        var checkout = CheckoutCoreTestData.CreateCheckout(new[]
         {
             new PricingRule("A", int.MaxValue)
         });
@@ -26,7 +29,7 @@ public class CheckoutPricingSafetyTests
     [Test]
     public void GetTotalPrice_WhenScannedItemHasNoPricingRule_ThrowsInvalidOperationException()
     {
-        var checkout = new global::CheckoutKata.Core.Checkout(new[]
+        var checkout = CheckoutCoreTestData.CreateCheckout(new[]
         {
             new PricingRule("A", 50)
         });
@@ -42,7 +45,7 @@ public class CheckoutPricingSafetyTests
     [Test]
     public void Scan_WhenItemCountOverflows_ThrowsOverflowException()
     {
-        var checkout = new global::CheckoutKata.Core.Checkout(new[]
+        var checkout = CheckoutCoreTestData.CreateCheckout(new[]
         {
             new PricingRule("A", 50)
         });
@@ -54,9 +57,9 @@ public class CheckoutPricingSafetyTests
             Throws.TypeOf<OverflowException>());
     }
 
-    private static void RemovePricingRuleViaReflection(global::CheckoutKata.Core.Checkout checkout, string item)
+    private static void RemovePricingRuleViaReflection(global::CheckoutKata.Core.Checkout.Checkout checkout, string item)
     {
-        var field = typeof(global::CheckoutKata.Core.Checkout)
+        var field = typeof(global::CheckoutKata.Core.Checkout.Checkout)
             .GetField("_pricingRules", BindingFlags.Instance | BindingFlags.NonPublic)!;
 
         var pricingRules = ((IReadOnlyList<PricingRule>)field.GetValue(checkout)!)
@@ -66,9 +69,9 @@ public class CheckoutPricingSafetyTests
         field.SetValue(checkout, pricingRules);
     }
 
-    private static void SetScannedCountViaReflection(global::CheckoutKata.Core.Checkout checkout, string item, int count)
+    private static void SetScannedCountViaReflection(global::CheckoutKata.Core.Checkout.Checkout checkout, string item, int count)
     {
-        var field = typeof(global::CheckoutKata.Core.Checkout)
+        var field = typeof(global::CheckoutKata.Core.Checkout.Checkout)
             .GetField("_scannedItemCounts", BindingFlags.Instance | BindingFlags.NonPublic)!;
 
         var scannedItemCounts = (IDictionary<string, int>)field.GetValue(checkout)!;

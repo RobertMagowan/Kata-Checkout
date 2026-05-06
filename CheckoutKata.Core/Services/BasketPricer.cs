@@ -1,19 +1,17 @@
-using System.Collections.Generic;
-using System.Linq;
+namespace CheckoutKata.Core.Services;
 
-namespace CheckoutKata.Core;
+using CheckoutKata.Core.Interfaces;
+
+using Models;
 
 public sealed class BasketPricer : IBasketPricer
 {
-    public int CalculateTotalPrice(
-        IReadOnlyCollection<ScannedItemCount> scannedItemCounts,
-        IReadOnlyCollection<PricingRule> pricingRules)
+    public int CalculateTotalPrice(IReadOnlyCollection<ScannedItemCount> scannedItemCounts, IReadOnlyCollection<PricingRule> pricingRules)
     {
         ArgumentNullException.ThrowIfNull(scannedItemCounts);
         ArgumentNullException.ThrowIfNull(pricingRules);
 
-        var pricingRulesByItem = pricingRules
-            .ToDictionary(rule => rule.Item, StringComparer.Ordinal);
+        var pricingRulesByItem = pricingRules.ToDictionary(rule => rule.Item, StringComparer.Ordinal);
         var totalPrice = 0;
 
         foreach (var scannedItem in scannedItemCounts)
@@ -34,15 +32,22 @@ public sealed class BasketPricer : IBasketPricer
 
     private static int CalculateItemPrice(PricingRule rule, int count)
     {
-        if (rule.SpecialQuantity is null || rule.SpecialPrice is null)
+        var basePrice = checked(rule.UnitPrice * count);
+        var bestPrice = basePrice;
+
+        if (rule.DiscountPolicies is null || rule.DiscountPolicies.Count == 0)
         {
-            return checked(rule.UnitPrice * count);
+            return bestPrice;
         }
 
-        var specialQuantity = rule.SpecialQuantity.Value;
-        var specialApplications = count / specialQuantity;
-        var remainingItems = count % specialQuantity;
+        foreach (var policy in rule.DiscountPolicies)
+        {
+            ArgumentNullException.ThrowIfNull(policy);
 
-        return checked((specialApplications * rule.SpecialPrice.Value) + (remainingItems * rule.UnitPrice));
+            var candidatePrice = policy.CalculatePrice(count, rule.UnitPrice);
+            bestPrice = Math.Min(bestPrice, candidatePrice);
+        }
+
+        return bestPrice;
     }
 }

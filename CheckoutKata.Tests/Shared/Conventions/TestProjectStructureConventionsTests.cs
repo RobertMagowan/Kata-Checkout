@@ -8,7 +8,7 @@ public class TestProjectStructureConventionsTests
 {
     private static readonly string[] TestTypeRoots = ["UnitTests", "IntegrationTests", "EndToEndTests"];
 
-    private static readonly string[] LayerRoots = ["Core", "Application", "Api", "Console"];
+    private static readonly string[] LayerRoots = ["Core", "Console"];
 
     private static readonly HashSet<string> BehaviorCategories =
     [

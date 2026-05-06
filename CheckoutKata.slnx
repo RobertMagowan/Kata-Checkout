@@ -1,6 +1,4 @@
 <Solution>
-  <Project Path="CheckoutKata.Api/CheckoutKata.Api.csproj" />
-  <Project Path="CheckoutKata.Application/CheckoutKata.Application.csproj" />
   <Project Path="CheckoutKata.Console/CheckoutKata.Console.csproj" />
   <Project Path="CheckoutKata.Core/CheckoutKata.Core.csproj" />
   <Project Path="CheckoutKata.Tests/CheckoutKata.Tests.csproj" />

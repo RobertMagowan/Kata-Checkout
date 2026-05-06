@@ -3,6 +3,10 @@ using CheckoutKata.Core;
 
 namespace CheckoutKata.Tests.UnitTests.Core.Checkout.Pricing;
 
+using CheckoutKata.Core.Interfaces;
+using CheckoutKata.Core.Models;
+using CheckoutKata.Core.Services;
+
 [Category("Core")]
 [Category("Pricing")]
 public class CheckoutPricingTests
@@ -85,13 +89,76 @@ public class CheckoutPricingTests
     }
 
     [Test]
+    public void GetTotalPrice_WithPercentOffPolicy_AppliesPercentDiscount()
+    {
+        var checkout = CheckoutCoreTestData.CreateCheckout(
+            new[]
+            {
+                CheckoutCoreTestData.CreatePercentOffRule("A", 100, 20)
+            });
+
+        CheckoutCoreTestData.ScanMany(checkout, "AAA");
+
+        var totalPrice = checkout.GetTotalPrice();
+
+        Assert.That(totalPrice, Is.EqualTo(240));
+    }
+
+    [Test]
+    public void GetTotalPrice_WithNForXAndPercentPolicies_SelectsSingleBestDiscount()
+    {
+        var checkout = CheckoutCoreTestData.CreateCheckout(
+            new[]
+            {
+                new PricingRule(
+                    "A",
+                    100,
+                    DiscountPolicies:
+                    [
+                        new NForXDiscountPolicy(3, 250),
+                        new PercentOffDiscountPolicy(20)
+                    ])
+            });
+
+        CheckoutCoreTestData.ScanMany(checkout, "AAA");
+
+        var totalPrice = checkout.GetTotalPrice();
+
+        Assert.That(totalPrice, Is.EqualTo(240));
+    }
+
+    [Test]
+    public void GetTotalPrice_WithNForXAndPercentPolicies_DoesNotStackDiscounts()
+    {
+        var checkout = CheckoutCoreTestData.CreateCheckout(
+            new[]
+            {
+                new PricingRule(
+                    "A",
+                    100,
+                    DiscountPolicies:
+                    [
+                        new NForXDiscountPolicy(3, 200),
+                        new PercentOffDiscountPolicy(20)
+                    ])
+            });
+
+        CheckoutCoreTestData.ScanMany(checkout, "AAA");
+
+        var totalPrice = checkout.GetTotalPrice();
+
+        Assert.That(totalPrice, Is.EqualTo(200));
+    }
+
+    [Test]
     public void GetTotalPrice_WithCustomBasketPricer_UsesInjectedPricingPolicy()
     {
         var basketPricer = new FixedTotalBasketPricer(999);
-        var checkout = new global::CheckoutKata.Core.Checkout(
-            new[] { new PricingRule("A", 50) },
-            new ItemValidator(),
-            basketPricer);
+        var checkout = new global::CheckoutKata.Core.Checkout.Checkout(
+                                                                       new[] { new PricingRule("A", 50) },
+                                                                       new ItemValidator(),
+                                                                       basketPricer,
+                                                                       new PricingRuleValidator());
 
         checkout.Scan("A");
 

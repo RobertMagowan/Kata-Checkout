@@ -1,14 +1,22 @@
 using CheckoutKata.Core;
+using CheckoutKata.Console;
+using CheckoutKata.Core.Checkout;
+using CheckoutKata.Core.Models;
+using CheckoutKata.Core.Services;
+using CheckoutKata.Core.Interfaces;
 
-var pricingRules = new[]
+IReadOnlyCollection<PricingRule> pricingRules;
+try
 {
-    new PricingRule("A", 50, 3, 130),
-    new PricingRule("B", 30, 2, 45),
-    new PricingRule("C", 20),
-    new PricingRule("D", 15)
-};
+    pricingRules = LoadPricingRules("pricing-rules.json");
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Failed to load pricing rules: {ex.Message}");
+    return;
+}
 
-ICheckout checkout = new Checkout(pricingRules);
+ICheckout checkout = CreateCheckout(pricingRules);
 
 Console.WriteLine("Checkout Kata Console");
 Console.WriteLine("Type 'help' for available commands.");
@@ -46,7 +54,7 @@ while (true)
                 break;
 
             case "reset":
-                checkout = new Checkout(pricingRules);
+                checkout = CreateCheckout(pricingRules);
                 Console.WriteLine("Checkout reset.");
                 break;
 
@@ -91,15 +99,30 @@ static void PrintRules(IEnumerable<PricingRule> rules)
 
     foreach (var rule in rules)
     {
-        if (rule.SpecialQuantity is null || rule.SpecialPrice is null)
+        if (rule.DiscountPolicies is null || rule.DiscountPolicies.Count == 0)
         {
             Console.WriteLine($"- Item {rule.Item}: {rule.UnitPrice}");
             continue;
         }
 
-        Console.WriteLine(
-            $"- Item {rule.Item}: {rule.UnitPrice} ({rule.SpecialQuantity} for {rule.SpecialPrice})");
+        var policyDescriptions = rule.DiscountPolicies
+            .Select(DescribePolicy)
+            .ToArray();
+
+        Console.WriteLine($"- Item {rule.Item}: {rule.UnitPrice} [{string.Join(", ", policyDescriptions)}]");
     }
+}
+
+static string DescribePolicy(IDiscountPolicy policy)
+{
+    return policy switch
+    {
+        NForXDiscountPolicy nForXPolicy =>
+            $"{nForXPolicy.Type}(quantity={nForXPolicy.Quantity}, price={nForXPolicy.Price})",
+        PercentOffDiscountPolicy percentOffPolicy =>
+            $"{percentOffPolicy.Type}(percentage={percentOffPolicy.Percentage})",
+        _ => policy.Type
+    };
 }
 
 static void PrintHelp()
@@ -112,4 +135,29 @@ static void PrintHelp()
     Console.WriteLine("- rules            : Show pricing rules");
     Console.WriteLine("- help             : Show help");
     Console.WriteLine("- exit             : Exit the application");
+}
+
+static IReadOnlyCollection<PricingRule> LoadPricingRules(string relativePath)
+{
+    ArgumentException.ThrowIfNullOrWhiteSpace(relativePath);
+
+    var absolutePath = Path.Combine(AppContext.BaseDirectory, relativePath);
+    if (!File.Exists(absolutePath))
+    {
+        throw new FileNotFoundException(
+            $"Pricing rules file was not found at '{absolutePath}'.",
+            absolutePath);
+    }
+
+    var json = File.ReadAllText(absolutePath);
+    return PricingRulesJsonDeserializer.Deserialize(json);
+}
+
+static ICheckout CreateCheckout(IReadOnlyCollection<PricingRule> pricingRules)
+{
+    return new Checkout(
+        pricingRules,
+        new ItemValidator(),
+        new BasketPricer(),
+        new PricingRuleValidator());
 }

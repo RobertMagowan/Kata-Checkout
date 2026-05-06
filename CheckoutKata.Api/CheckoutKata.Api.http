@@ -1,6 +1,0 @@
-@CheckoutKata.Api_HostAddress = http://localhost:5110
-
-GET {{CheckoutKata.Api_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

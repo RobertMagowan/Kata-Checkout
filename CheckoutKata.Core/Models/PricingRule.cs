@@ -1,7 +1,8 @@
-namespace CheckoutKata.Core;
+namespace CheckoutKata.Core.Models;
 
-public sealed record PricingRule(
-    string Item,
-    int UnitPrice,
-    int? SpecialQuantity = null,
-    int? SpecialPrice = null);
+using CheckoutKata.Core.Interfaces;
+
+
+public sealed record PricingRule(string Item,
+                                 int UnitPrice,
+                                 IReadOnlyList<IDiscountPolicy>? DiscountPolicies = null);

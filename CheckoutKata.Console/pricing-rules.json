@@ -1,0 +1,38 @@
+{
+  "rules": [
+    {
+      "item": "A",
+      "unitPrice": 50,
+      "discountPolicies": [
+        {
+          "type": "n_for_x",
+          "parameters": {
+            "quantity": 3,
+            "price": 130
+          }
+        }
+      ]
+    },
+    {
+      "item": "B",
+      "unitPrice": 30,
+      "discountPolicies": [
+        {
+          "type": "n_for_x",
+          "parameters": {
+            "quantity": 2,
+            "price": 45
+          }
+        }
+      ]
+    },
+    {
+      "item": "C",
+      "unitPrice": 20
+    },
+    {
+      "item": "D",
+      "unitPrice": 15
+    }
+  ]
+}

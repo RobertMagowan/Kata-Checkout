@@ -1,6 +1,9 @@
 using CheckoutKata.Tests.Shared.Core;
+using CheckoutKata.Core;
 
 namespace CheckoutKata.Tests.UnitTests.Core.Checkout.State;
+
+using CheckoutKata.Core.Models;
 
 [Category("Core")]
 [Category("State")]
@@ -37,17 +40,18 @@ public class CheckoutStateReaderTests
         var itemARule = pricingRules.Single(rule => rule.Item == "A");
         var itemBRule = pricingRules.Single(rule => rule.Item == "B");
         var itemCRule = pricingRules.Single(rule => rule.Item == "C");
+        var itemAPolicy = (NForXDiscountPolicy)itemARule.DiscountPolicies!.Single();
+        var itemBPolicy = (NForXDiscountPolicy)itemBRule.DiscountPolicies!.Single();
 
         Assert.Multiple(() =>
         {
             Assert.That(pricingRules.Count, Is.EqualTo(4));
             Assert.That(itemARule.UnitPrice, Is.EqualTo(50));
-            Assert.That(itemARule.SpecialQuantity, Is.EqualTo(3));
-            Assert.That(itemARule.SpecialPrice, Is.EqualTo(130));
-            Assert.That(itemBRule.SpecialQuantity, Is.EqualTo(2));
-            Assert.That(itemBRule.SpecialPrice, Is.EqualTo(45));
-            Assert.That(itemCRule.SpecialQuantity, Is.Null);
-            Assert.That(itemCRule.SpecialPrice, Is.Null);
+            Assert.That(itemAPolicy.Quantity, Is.EqualTo(3));
+            Assert.That(itemAPolicy.Price, Is.EqualTo(130));
+            Assert.That(itemBPolicy.Quantity, Is.EqualTo(2));
+            Assert.That(itemBPolicy.Price, Is.EqualTo(45));
+            Assert.That(itemCRule.DiscountPolicies, Is.Null.Or.Empty);
         });
     }
 }
