@@ -1,8 +1,10 @@
-using CheckoutKata.Core;
+using CheckoutKata.Tests.Shared.Core;
 
-namespace CheckoutKata.Tests.EndToEnd;
+namespace CheckoutKata.Tests.EndToEndTests.Core.Checkout;
 
-[TestFixture]
+[Category("Core")]
+[Category("EndToEnd")]
+[Category("Integration")]
 public class CheckoutEndToEndTests
 {
     [TestCase("", 0)]
@@ -20,9 +22,9 @@ public class CheckoutEndToEndTests
     [TestCase("DABABA", 190)]
     public void EndToEnd_BasketTotals_MatchExpectedForConfiguredRules(string basket, int expectedTotal)
     {
-        var checkout = CreateCheckout();
+        var checkout = CheckoutCoreTestData.CreateCheckout();
 
-        ScanMany(checkout, basket);
+        CheckoutCoreTestData.ScanMany(checkout, basket);
 
         var totalPrice = checkout.GetTotalPrice();
 
@@ -32,12 +34,12 @@ public class CheckoutEndToEndTests
     [Test]
     public void EndToEnd_ScanTotalClearRescan_WorksAcrossFullLifecycle()
     {
-        var checkout = CreateCheckout();
+        var checkout = CheckoutCoreTestData.CreateCheckout();
 
-        ScanMany(checkout, "AAABB");
+        CheckoutCoreTestData.ScanMany(checkout, "AAABB");
         var firstTotal = checkout.GetTotalPrice();
         checkout.Clear();
-        ScanMany(checkout, "DABABA");
+        CheckoutCoreTestData.ScanMany(checkout, "DABABA");
         var secondTotal = checkout.GetTotalPrice();
 
         Assert.Multiple(() =>
@@ -51,9 +53,9 @@ public class CheckoutEndToEndTests
     [Test]
     public void EndToEnd_ExposesPricingRulesAndScannedCounts_ForUiAdapters()
     {
-        var checkout = CreateCheckout();
+        var checkout = CheckoutCoreTestData.CreateCheckout();
 
-        ScanMany(checkout, "BABA");
+        CheckoutCoreTestData.ScanMany(checkout, "BABA");
 
         var pricingRules = checkout.GetPricingRules();
         var scannedItems = checkout.GetScannedItems();
@@ -69,25 +71,7 @@ public class CheckoutEndToEndTests
             Assert.That(itemB.Quantity, Is.EqualTo(2));
         });
     }
-
-    private static Checkout CreateCheckout()
-    {
-        var rules = new[]
-        {
-            new PricingRule("A", 50, 3, 130),
-            new PricingRule("B", 30, 2, 45),
-            new PricingRule("C", 20),
-            new PricingRule("D", 15)
-        };
-
-        return new Checkout(rules);
-    }
-
-    private static void ScanMany(ICheckout checkout, string basket)
-    {
-        foreach (var item in basket)
-        {
-            checkout.Scan(item.ToString());
-        }
-    }
 }
+
+
+

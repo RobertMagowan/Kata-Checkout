@@ -1,7 +1,7 @@
 using CheckoutKata.Application.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace CheckoutKata.Tests.TestHelpers;
+namespace CheckoutKata.Tests.Shared.Infrastructure.Persistence;
 
 internal static class TestDbContextFactory
 {

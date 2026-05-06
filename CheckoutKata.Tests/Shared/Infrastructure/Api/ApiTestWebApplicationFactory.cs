@@ -1,13 +1,13 @@
 using CheckoutKata.Application.Carts;
 using CheckoutKata.Application.Persistence;
-using CheckoutKata.Tests.TestHelpers;
-using Microsoft.AspNetCore.Mvc.Testing;
+using CheckoutKata.Tests.Shared.Infrastructure.Time;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace CheckoutKata.Tests.Api;
+namespace CheckoutKata.Tests.Shared.Infrastructure.Api;
 
 internal sealed class ApiTestWebApplicationFactory(
     TestTimeProvider timeProvider,
@@ -27,6 +27,7 @@ internal sealed class ApiTestWebApplicationFactory(
 
             services.AddDbContextFactory<CheckoutKataDbContext>(options =>
                 options.UseInMemoryDatabase(Guid.NewGuid().ToString("N")));
+
             services.AddSingleton(sessionOptions ?? new CartSessionOptions());
             services.AddSingleton<CheckoutSessionService>(serviceProvider =>
             {
@@ -37,8 +38,10 @@ internal sealed class ApiTestWebApplicationFactory(
                     TimeProvider,
                     options);
             });
+
             services.AddSingleton<ICheckoutSessionService>(serviceProvider =>
                 serviceProvider.GetRequiredService<CheckoutSessionService>());
+
             services.AddSingleton<ICheckoutSessionMaintenance>(serviceProvider =>
                 serviceProvider.GetRequiredService<CheckoutSessionService>());
         });

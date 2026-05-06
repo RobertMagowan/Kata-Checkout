@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <DeterministicReport>true</DeterministicReport>
+          <UseSourceLink>true</UseSourceLink>
+          <Include>[CheckoutKata.Core*]*,[CheckoutKata.Application*]*</Include>
+          <Exclude>[CheckoutKata.Tests*]*,[CheckoutKata.Api*]*,[CheckoutKata.Console*]*</Exclude>
+          <ExcludeByFile>**/Program.cs,**/*g.cs,**/*Designer.cs</ExcludeByFile>
+          <Threshold>95</Threshold>
+          <ThresholdType>line</ThresholdType>
+          <ThresholdStat>total</ThresholdStat>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

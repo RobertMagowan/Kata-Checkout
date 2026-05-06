@@ -6,10 +6,23 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <CollectCoverage>true</CollectCoverage>
+    <CoverletOutput>$(MSBuildProjectDirectory)\TestResults\coverage\</CoverletOutput>
+    <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+    <Threshold Condition="'$(EnforceCoverageGate)' == 'true'">95</Threshold>
+    <ThresholdType Condition="'$(EnforceCoverageGate)' == 'true'">line</ThresholdType>
+    <ThresholdStat Condition="'$(EnforceCoverageGate)' == 'true'">total</ThresholdStat>
+    <Include>[CheckoutKata.Core*]*,[CheckoutKata.Application*]*</Include>
+    <Exclude>[CheckoutKata.Tests*]*,[CheckoutKata.Api*]*,[CheckoutKata.Console*]*</Exclude>
+    <DeterministicReport>true</DeterministicReport>
+    <UseSourceLink>true</UseSourceLink>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="coverlet.msbuild" Version="6.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.7" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.0" />
     <PackageReference Include="NUnit" Version="4.3.2" />

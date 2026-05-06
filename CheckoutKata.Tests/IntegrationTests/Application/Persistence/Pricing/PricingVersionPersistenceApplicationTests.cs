@@ -1,12 +1,14 @@
 using System.Text.Json;
 using CheckoutKata.Application.Persistence;
 using CheckoutKata.Core;
-using CheckoutKata.Tests.TestHelpers;
+using CheckoutKata.Tests.Shared.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace CheckoutKata.Tests.Application;
+namespace CheckoutKata.Tests.IntegrationTests.Application.Persistence.Pricing;
 
-public class PricingVersionPersistenceTests
+[Category("Application")]
+[Category("Persistence")]
+public class PricingVersionPersistenceApplicationTests
 {
     [Test]
     public async Task DbContext_CanStoreAndLoadActivePricingVersionWithRules()
@@ -91,3 +93,6 @@ public class PricingVersionPersistenceTests
         }
     }
 }
+
+
+

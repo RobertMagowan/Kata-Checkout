@@ -1,4 +1,4 @@
-namespace CheckoutKata.Tests.TestHelpers;
+namespace CheckoutKata.Tests.Shared.Infrastructure.Time;
 
 internal sealed class TestTimeProvider(DateTimeOffset utcNow) : TimeProvider
 {
