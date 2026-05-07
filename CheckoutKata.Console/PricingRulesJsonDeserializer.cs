@@ -66,18 +66,17 @@ internal static class PricingRulesJsonDeserializer
         ArgumentException.ThrowIfNullOrWhiteSpace(policy.Type);
 
         var normalizedType = policy.Type.Trim().ToLowerInvariant();
-        if (normalizedType == NForXPolicyType)
-        {
-            return new NForXDiscountPolicy(GetRequiredParameter(policy.Quantity, policy, QuantityParameterName),
-                                           GetRequiredParameter(policy.Price, policy, PriceParameterName));
-        }
 
-        if (normalizedType == PercentOffPolicyType)
+        return normalizedType switch
         {
-            return new PercentOffDiscountPolicy(GetRequiredParameter(policy.Percentage, policy, PercentageParameterName));
-        }
+            NForXPolicyType => new NForXDiscountPolicy(GetRequiredParameter(policy.Quantity, policy, QuantityParameterName),
+                                                       GetRequiredParameter(policy.Price, policy, PriceParameterName)),
 
-        throw new ArgumentException($"Unsupported discount policy type '{policy.Type}'.");
+            PercentOffPolicyType => new PercentOffDiscountPolicy(GetRequiredParameter(policy.Percentage, policy,
+                                                                                      PercentageParameterName)),
+
+            _ => throw new ArgumentException($"Unsupported discount policy type '{policy.Type}'.")
+        };
     }
 
     private static int GetRequiredParameter(int? value, DiscountPolicyDto policy, string parameterName)
