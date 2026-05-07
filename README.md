@@ -69,6 +69,62 @@ Commands:
 - `help`
 - `exit`
 
+## JSON pricing file format
+
+The console app can load pricing rules from a JSON file. The JSON must match the structure expected by `PricingRulesJsonDeserializer`.
+
+Top-level object:
+- `rules`: array of pricing rule objects (required, at least one)
+
+Per-rule object fields:
+- `item`: single uppercase letter (e.g. "A")
+- `unitPrice`: integer monetary value (> 0)
+- `discountPolicies`: optional array of policy objects
+
+Policy object fields:
+- `type`: string, supported values: `"n_for_x"`, `"percent_off"`
+- For `"n_for_x"`: required `quantity` (int) and `price` (int)
+- For `"percent_off"`: required `percentage` (int)
+
+Example `pricing-rules.json`:
+
+```
+{
+  "rules": [
+    { "item": "A", "unitPrice": 50, "discountPolicies": [ { "type": "n_for_x", "quantity": 3, "price": 130 } ] },
+    { "item": "B", "unitPrice": 30, "discountPolicies": [ { "type": "n_for_x", "quantity": 2, "price": 45 } ] },
+    { "item": "C", "unitPrice": 20 },
+    { "item": "D", "unitPrice": 15, "discountPolicies": [ { "type": "percent_off", "percentage": 20 } ] }
+  ]
+}
+```
+
+Validation notes:
+- The deserializer throws `ArgumentException` for invalid JSON or missing required fields.
+- `PricingRuleValidator` enforces rule constraints at `Checkout` construction (duplicate items, invalid item format, non-positive unit price).
+
+## Minimal client example
+
+The following is a minimal in-code example showing how a consumer would use the core Checkout component:
+
+```csharp
+using System.IO;
+using CheckoutKata.Console; // PricingRulesJsonDeserializer
+using CheckoutKata.Core.Checkout;
+using CheckoutKata.Core.Services;
+
+// load pricing rules from JSON file
+var json = File.ReadAllText("pricing-rules.json");
+var pricingRules = PricingRulesJsonDeserializer.Deserialize(json);
+
+var checkout = new Checkout(pricingRules, new ItemValidator(), new BasketPricer(), new PricingRuleValidator());
+checkout.Scan("A");
+checkout.Scan("A");
+checkout.Scan("B");
+var total = checkout.GetTotalPrice(); // returns int monetary value
+checkout.Clear();
+```
+
 ## Design Notes
 
 - Monetary values are represented as integers (kata style).
@@ -84,5 +140,39 @@ Commands:
 Additional docs:
 - `docs/ASSUMPTIONS.md`
 - `docs/CODING_STYLE.md`
+
+## JSON pricing file format
+
+The console app can load pricing rules from a JSON file. The JSON must match the structure expected by `PricingRulesJsonDeserializer`.
+
+Top-level object:
+- `rules`: array of pricing rule objects (required, at least one)
+
+Per-rule object fields:
+- `item`: single uppercase letter (e.g. "A")
+- `unitPrice`: integer monetary value (> 0)
+- `discountPolicies`: optional array of policy objects
+
+Policy object fields:
+- `type`: string, supported values: `"n_for_x"`, `"percent_off"`
+- For `"n_for_x"`: required `quantity` (int) and `price` (int)
+- For `"percent_off"`: required `percentage` (int)
+
+Example `pricing-rules.json`:
+
+```
+{
+  "rules": [
+    { "item": "A", "unitPrice": 50, "discountPolicies": [ { "type": "n_for_x", "quantity": 3, "price": 130 } ] },
+    { "item": "B", "unitPrice": 30, "discountPolicies": [ { "type": "n_for_x", "quantity": 2, "price": 45 } ] },
+    { "item": "C", "unitPrice": 20 },
+    { "item": "D", "unitPrice": 15, "discountPolicies": [ { "type": "percent_off", "percentage": 20 } ] }
+  ]
+}
+```
+
+Validation notes:
+- The deserializer throws `ArgumentException` for invalid JSON or missing required fields.
+- `PricingRuleValidator` enforces rule constraints at `Checkout` construction (duplicate items, invalid item format, non-positive unit price).
 
 
