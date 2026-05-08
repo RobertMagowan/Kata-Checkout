@@ -44,9 +44,9 @@ public class CheckoutPricingSafetyTests
         Assert.That(() => checkout.Scan("A"), Throws.TypeOf<OverflowException>());
     }
 
-    private static void RemovePricingRuleViaReflection(CheckoutKata.Core.Checkout.Checkout checkout, string item)
+    private static void RemovePricingRuleViaReflection(Checkout checkout, string item)
     {
-        var field = typeof(CheckoutKata.Core.Checkout.Checkout).GetField("_pricingRulesByItem", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var field = typeof(Checkout).GetField("_pricingRulesByItem", BindingFlags.Instance | BindingFlags.NonPublic)!;
 
         var pricingRulesByItem = (IReadOnlyDictionary<string, PricingRule>)field.GetValue(checkout)!;
 
