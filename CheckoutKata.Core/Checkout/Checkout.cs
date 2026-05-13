@@ -5,7 +5,7 @@ using Models;
 
 public sealed class Checkout : ICheckout, ICheckoutStateReader
 {
-    private readonly Dictionary<string, int> _scannedItemCounts = new(StringComparer.Ordinal);
+    private readonly IDictionary<string, int> _scannedItemCounts = new Dictionary<string, int>(StringComparer.Ordinal);
     private readonly IScannedItemValidator _itemValidator;
     private readonly IBasketPricer _basketPricer;
     private readonly IReadOnlyDictionary<string, PricingRule> _pricingRulesByItem;
