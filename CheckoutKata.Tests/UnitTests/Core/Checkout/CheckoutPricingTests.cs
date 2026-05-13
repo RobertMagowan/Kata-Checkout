@@ -173,12 +173,11 @@ public class CheckoutPricingTests
     [TestCase("AAAAAAAAAA", 700)]
     public void GetTotalPrice_WithMultipleNForXPolicies_SelectsBestDiscount(string basket, int expectedTotal)
     {
-        var checkout = CreateCheckout([
-                                          new PricingRule("A", 100, DiscountPolicies: [
-                                                                                          new NForXDiscountPolicy(2, 170),
-                                                                                          new NForXDiscountPolicy(3, 240),
-                                                                                          new NForXDiscountPolicy(5, 350)
-                                                                                      ])
+        var checkout = CreateCheckout([new PricingRule("A", 100, DiscountPolicies: [
+                                                                                       new NForXDiscountPolicy(2, 170),
+                                                                                       new NForXDiscountPolicy(3, 240),
+                                                                                       new NForXDiscountPolicy(5, 350)
+                                                                                   ])
                                       ]);
 
         ScanMany(checkout, basket);

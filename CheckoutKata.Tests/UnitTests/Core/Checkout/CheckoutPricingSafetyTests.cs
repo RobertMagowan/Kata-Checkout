@@ -1,10 +1,8 @@
 using System.Reflection;
-using CheckoutKata.Core;
 
 namespace CheckoutKata.Tests.UnitTests.Core.Checkout;
 
 using CheckoutKata.Core.Checkout;
-using CheckoutKata.Core.Interfaces;
 using CheckoutKata.Core.Models;
 using CheckoutKata.Core.Services;
 
