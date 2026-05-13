@@ -6,6 +6,7 @@ using CheckoutKata.Core.Services;
 using CheckoutKata.Core.Interfaces;
 
 const int BagUnitPrice = 10;
+const int ItemsPerBag = 10;
 IReadOnlyCollection<PricingRule> pricingRules;
 
 try
@@ -18,7 +19,7 @@ catch (Exception ex)
     return;
 }
 
-var checkout = CreateCheckout(pricingRules, BagUnitPrice);
+var checkout = CreateCheckout(pricingRules, BagUnitPrice, ItemsPerBag);
 
 Console.WriteLine("Checkout Kata Console");
 Console.WriteLine("Type 'help' for available commands.");
@@ -56,22 +57,16 @@ while (true)
                 break;
 
             case "reset":
-                checkout = CreateCheckout(pricingRules, BagUnitPrice);
+                checkout = CreateCheckout(pricingRules, BagUnitPrice, ItemsPerBag);
                 Console.WriteLine("Checkout reset.");
                 break;
 
-            case "bags":
-                var bagCount = ParseBagCount(argument);
-                checkout.SetBagCount(bagCount);
-                Console.WriteLine($"Selected {bagCount} checkout bag(s) at {BagUnitPrice} each.");
-                break;
-
             case "rules":
-                PrintRules(pricingRules, BagUnitPrice);
+                PrintRules(pricingRules, BagUnitPrice, ItemsPerBag);
                 break;
 
             case "help":
-                PrintHelp(BagUnitPrice);
+                PrintHelp();
                 break;
 
             case "exit":
@@ -88,18 +83,6 @@ while (true)
     }
 }
 
-static int ParseBagCount(string argument)
-{
-    if (!int.TryParse(argument, out var bagCount))
-    {
-        throw new ArgumentException("Bag count must be a whole number.", nameof(argument));
-    }
-
-    if (bagCount < 0) throw new ArgumentException("Bag count cannot be negative.", nameof(argument));
-
-    return bagCount;
-}
-
 static void ScanMany(ICheckout checkout, string basket)
 {
     if (string.IsNullOrWhiteSpace(basket))
@@ -114,7 +97,8 @@ static void ScanMany(ICheckout checkout, string basket)
 }
 
 static void PrintRules(IEnumerable<PricingRule> rules,
-                       int bagUnitPrice)
+                       int bagUnitPrice,
+                       int itemsPerBag)
 {
     Console.WriteLine("Pricing rules:");
 
@@ -131,7 +115,7 @@ static void PrintRules(IEnumerable<PricingRule> rules,
         Console.WriteLine($"- Item {rule.Item}: {rule.UnitPrice} [{string.Join(", ", policyDescriptions)}]");
     }
 
-    Console.WriteLine($"- Checkout bag: {bagUnitPrice}");
+    Console.WriteLine($"- Checkout bag: {bagUnitPrice}, automatically one per {itemsPerBag} scanned items");
 }
 
 static string DescribePolicy(IDiscountPolicy policy)
@@ -166,12 +150,11 @@ static string ConvertPascalToSnakeCase(string value)
     return builder.ToString();
 }
 
-static void PrintHelp(int bagUnitPrice)
+static void PrintHelp()
 {
     Console.WriteLine("Available commands:");
     Console.WriteLine("- scan <ITEM>      : Scan one item (example: scan A)");
     Console.WriteLine("- scanmany <ITEMS> : Scan many items from a basket string (example: scanmany ABBA)");
-    Console.WriteLine($"- bags <COUNT>     : Set checkout bag count at {bagUnitPrice} each (example: bags 2)");
     Console.WriteLine("- total            : Display the current total price");
     Console.WriteLine("- reset            : Reset current basket");
     Console.WriteLine("- rules            : Show pricing rules");
@@ -193,9 +176,10 @@ static IReadOnlyCollection<PricingRule> LoadPricingRules(string relativePath)
     return PricingRulesJsonDeserializer.Deserialize(json);
 }
 
-static IBagSelectionCheckout CreateCheckout(IReadOnlyCollection<PricingRule> pricingRules,
-                                            int bagUnitPrice)
+static IBagAwareCheckout CreateCheckout(IReadOnlyCollection<PricingRule> pricingRules,
+                                        int bagUnitPrice,
+                                        int itemsPerBag)
 {
     var innerCheckout = new Checkout(pricingRules, new ItemValidator(), new BasketPricer(), new PricingRuleValidator());
-    return new BagSelectionCheckout(innerCheckout, new BagPolicy(bagUnitPrice));
+    return new BagAwareCheckout(innerCheckout, new BagPolicy(bagUnitPrice), new OneBagPerItemCountPolicy(itemsPerBag));
 }

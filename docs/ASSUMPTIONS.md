@@ -18,14 +18,16 @@ The following assumptions reflect the current repository state (`CheckoutKata.Co
 14. If a configured discount policy would produce a worse price than base unit pricing, base pricing is retained.
 15. Arithmetic is overflow-checked (`checked`) and may throw `OverflowException`.
 16. `Clear` behavior is idempotent (calling it multiple times keeps basket empty and total at zero).
-17. Checkout bag charges are selected separately from scanned item SKUs and are not eligible for item discount policies.
+17. Checkout bag charges are separate from scanned item SKUs and are not eligible for item discount policies.
 18. `BagSelectionCheckout` exposes bag count through `IBagSelection`, item/bag cost reads through `ICheckoutCostBreakdown`, and the full surface through `IBagSelectionCheckout`.
 19. `Checkout` exposes its full command/read surface through `ICheckoutSession`.
 20. `BagSelectionCheckout` decorates `ICheckoutSession` rather than depending on the concrete `Checkout` type.
-21. Console checkout bags are hardcoded at 10 monetary units each.
-22. Core types are not designed for concurrent mutation from multiple threads on the same checkout instance.
-23. Console pricing rules are loaded from `pricing-rules.json` at startup.
-24. Console deserializer currently supports policy types `n_for_x` and `percent_off`.
-25. Console policy type matching is case-insensitive after normalization.
-26. Console policy parameters are flattened per policy object (`quantity`, `price`, `percentage`) and are deserialized using web defaults (case-insensitive property matching).
-27. Test coverage gate targets `CheckoutKata.Core` with minimum 95% line coverage when `EnforceCoverageGate=true`.
+21. `BagAwareCheckout` exposes automatically calculated bag count through `IBagCountReader`, item/bag cost reads through `ICheckoutCostBreakdown`, and the full surface through `IBagAwareCheckout`.
+22. `BagAwareCheckout` decorates `ICheckoutSession` rather than depending on the concrete `Checkout` type.
+23. Console checkout bags are hardcoded at 10 monetary units each and calculated as one bag per 10 scanned items.
+24. Core types are not designed for concurrent mutation from multiple threads on the same checkout instance.
+25. Console pricing rules are loaded from `pricing-rules.json` at startup.
+26. Console deserializer currently supports policy types `n_for_x` and `percent_off`.
+27. Console policy type matching is case-insensitive after normalization.
+28. Console policy parameters are flattened per policy object (`quantity`, `price`, `percentage`) and are deserialized using web defaults (case-insensitive property matching).
+29. Test coverage gate targets `CheckoutKata.Core` with minimum 95% line coverage when `EnforceCoverageGate=true`.
