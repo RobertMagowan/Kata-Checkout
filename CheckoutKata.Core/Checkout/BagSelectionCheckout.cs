@@ -5,11 +5,11 @@ using Models;
 
 public sealed class BagSelectionCheckout : IBagSelectionCheckout
 {
-    private readonly Checkout _inner;
+    private readonly ICheckoutSession _inner;
     private readonly IBagPolicy _bagPolicy;
     private int _bagCount;
 
-    public BagSelectionCheckout(Checkout inner,
+    public BagSelectionCheckout(ICheckoutSession inner,
                                 IBagPolicy bagPolicy)
     {
         ArgumentNullException.ThrowIfNull(inner);

@@ -43,7 +43,7 @@ public class CheckoutLifecycleTests
         Assert.That(scannedItems, Is.Empty);
     }
 
-    private static Checkout CreateCheckout()
+    private static ICheckoutSession CreateCheckout()
     {
         return new Checkout(CreateDefaultRules(), new ItemValidator(), new BasketPricer(), new PricingRuleValidator());
     }
@@ -61,7 +61,7 @@ public class CheckoutLifecycleTests
         return new PricingRule(item, unitPrice, DiscountPolicies: [new NForXDiscountPolicy(quantity, price)]);
     }
 
-    private static void ScanMany(ICheckout checkout, string basket)
+    private static void ScanMany(ICheckoutSession checkout, string basket)
     {
         foreach (var item in basket)
         {

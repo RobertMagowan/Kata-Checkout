@@ -82,7 +82,7 @@ while (true)
                 break;
         }
     }
-    catch (Exception ex) when (ex is ArgumentException or ArgumentNullException)
+    catch (Exception ex) when (ex is ArgumentException or ArgumentNullException or OverflowException)
     {
         Console.WriteLine($"Input error: {ex.Message}");
     }

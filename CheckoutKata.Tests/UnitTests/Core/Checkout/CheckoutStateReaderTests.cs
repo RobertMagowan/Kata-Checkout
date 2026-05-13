@@ -5,6 +5,7 @@ namespace CheckoutKata.Tests.UnitTests.Core.Checkout;
 using CheckoutKata.Core.Models;
 using CheckoutKata.Core.Policies;
 using CheckoutKata.Core.Services;
+using CheckoutKata.Core.Interfaces;
 
 [Category("Core")]
 [Category("State")]
@@ -54,7 +55,7 @@ public class CheckoutStateReaderTests
         });
     }
 
-    private static CheckoutKata.Core.Checkout.Checkout CreateCheckout()
+    private static ICheckoutSession CreateCheckout()
     {
         return new CheckoutKata.Core.Checkout.Checkout(CreateDefaultRules(), new ItemValidator(), new BasketPricer(), new PricingRuleValidator());
     }

@@ -214,12 +214,12 @@ public class CheckoutPricingTests
         }
     }
 
-    private static CheckoutKata.Core.Checkout.Checkout CreateCheckout()
+    private static ICheckoutSession CreateCheckout()
     {
         return CreateCheckout(CreateDefaultRules());
     }
 
-    private static CheckoutKata.Core.Checkout.Checkout CreateCheckout(IReadOnlyCollection<PricingRule> rules)
+    private static ICheckoutSession CreateCheckout(IReadOnlyCollection<PricingRule> rules)
     {
         return new CheckoutKata.Core.Checkout.Checkout(rules, new ItemValidator(), new BasketPricer(), new PricingRuleValidator());
     }

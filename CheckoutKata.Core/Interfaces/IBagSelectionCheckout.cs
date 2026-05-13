@@ -1,5 +1,5 @@
 namespace CheckoutKata.Core.Interfaces;
 
-public interface IBagSelectionCheckout : ICheckout, ICheckoutStateReader, IBagSelection, ICheckoutCostBreakdown
+public interface IBagSelectionCheckout : ICheckoutSession, IBagSelection, ICheckoutCostBreakdown
 {
 }

@@ -136,7 +136,8 @@ public class CheckoutBagSelectionTests
     [Test]
     public void GetTotalBagCost_WithCustomBagPolicy_UsesInjectedPolicy()
     {
-        IBagSelectionCheckout checkout = new BagSelectionCheckout(CreateInnerCheckout(), new FixedBagPolicy(25));
+        var innerCheckout = CreateInnerCheckout();
+        IBagSelectionCheckout checkout = new BagSelectionCheckout(innerCheckout, new FixedBagPolicy(25));
 
         checkout.SetBagCount(2);
 
@@ -239,10 +240,12 @@ public class CheckoutBagSelectionTests
 
     private static BagSelectionCheckout CreateConcreteCheckout()
     {
-        return new BagSelectionCheckout(CreateInnerCheckout(), new BagPolicy(10));
+        var innerCheckout = CreateInnerCheckout();
+
+        return new BagSelectionCheckout(innerCheckout, new BagPolicy(10));
     }
 
-    private static Checkout CreateInnerCheckout()
+    private static ICheckoutSession CreateInnerCheckout()
     {
         return new Checkout(CreateDefaultRules(), new ItemValidator(), new BasketPricer(), new PricingRuleValidator());
     }

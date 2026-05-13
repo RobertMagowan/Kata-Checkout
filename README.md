@@ -27,6 +27,7 @@ Default console rules (from `CheckoutKata.Console/pricing-rules.json`):
 - `CheckoutKata.Core`
   - `ICheckout` minimal contract (`Scan`, `GetTotalPrice`, `Clear`).
   - `ICheckoutStateReader` typed snapshot reads (`GetScannedItems`, `GetPricingRules`).
+  - `ICheckoutSession` convenience composite contract for clients that need both checkout commands and state reads.
   - `IBagSelection` checkout bag selection contract.
   - `ICheckoutCostBreakdown` typed item/bag cost reads.
   - `IBagSelectionCheckout` convenience composite contract for clients that need the full bag-aware checkout surface.
@@ -37,7 +38,7 @@ Default console rules (from `CheckoutKata.Console/pricing-rules.json`):
   - `PricingRule` immutable rule model (`Item` naming only).
   - `BagPolicy` default checkout bag charge implementation.
   - `BasketPricer` default pricing implementation.
-  - `BagSelectionCheckout` wrapper that adds selected bag charges, exposes item/bag totals, and forwards item checkout behavior.
+  - `BagSelectionCheckout` wrapper that decorates `ICheckoutSession`, adds selected bag charges, exposes item/bag totals, and forwards item checkout behavior.
   - `ItemValidator` default scan input validation implementation.
   - `PricingRuleValidator` constructor-time rule validation.
   - Policy implementations:
