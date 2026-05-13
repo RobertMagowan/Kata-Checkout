@@ -12,6 +12,7 @@ Items are scanned one at a time. Each Item has a unit price, and some Items have
 The checkout must:
 - accept Items in any order,
 - apply discount policies correctly,
+- include selected checkout bag charges in the total,
 - compute the correct total.
 
 Default console rules (from `CheckoutKata.Console/pricing-rules.json`):
@@ -19,17 +20,24 @@ Default console rules (from `CheckoutKata.Console/pricing-rules.json`):
 - Item `B`: 30, `n_for_x` (`quantity=2`, `price=45`)
 - Item `C`: 20
 - Item `D`: 15
+- Checkout bags: 10 each, selected separately from scanned items
 
 ## Solution Structure
 
 - `CheckoutKata.Core`
   - `ICheckout` minimal contract (`Scan`, `GetTotalPrice`, `Clear`).
   - `ICheckoutStateReader` typed snapshot reads (`GetScannedItems`, `GetPricingRules`).
+  - `IBagSelection` checkout bag selection contract.
+  - `ICheckoutCostBreakdown` typed item/bag cost reads.
+  - `IBagSelectionCheckout` convenience composite contract for clients that need the full bag-aware checkout surface.
   - `IScannedItemValidator` extension point for scan validation policy.
   - `IBasketPricer` extension point for total pricing policy.
+  - `IBagPolicy` extension point for checkout bag charge policy.
   - `Checkout` orchestration + scan state (defaulting to `ItemValidator` + `BasketPricer`).
   - `PricingRule` immutable rule model (`Item` naming only).
+  - `BagPolicy` default checkout bag charge implementation.
   - `BasketPricer` default pricing implementation.
+  - `BagSelectionCheckout` wrapper that adds selected bag charges, exposes item/bag totals, and forwards item checkout behavior.
   - `ItemValidator` default scan input validation implementation.
   - `PricingRuleValidator` constructor-time rule validation.
   - Policy implementations:
@@ -63,6 +71,7 @@ dotnet run --project .\CheckoutKata.Console\CheckoutKata.Console.csproj
 Commands:
 - `scan <ITEM>`
 - `scanmany <ITEMS>`
+- `bags <COUNT>`
 - `total`
 - `reset`
 - `rules`
@@ -131,6 +140,9 @@ checkout.Clear();
 - Core item format is one uppercase alphabetic character (`char.IsLetter` + `char.IsUpper`).
 - Invalid scan inputs throw exceptions in the Core library.
 - `Checkout` is stateful and non-idempotent (`Scan` increments basket quantity per call).
+- Checkout bag charges are selected separately from scanned item SKUs and are not eligible for item discount policies.
+- `BagSelectionCheckout` exposes bag selection through `IBagSelection` and item/bag cost reads through `ICheckoutCostBreakdown`.
+- The console app hardcodes checkout bags at 10 monetary units each.
 - Discount policies are evaluated per item and the lowest total for that item is selected (no discount stacking).
 - Arithmetic is guarded using `checked` to fail fast on overflow.
 - Core does not normalize input casing; callers must supply valid item codes.

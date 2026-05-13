@@ -18,9 +18,12 @@ The following assumptions reflect the current repository state (`CheckoutKata.Co
 14. If a configured discount policy would produce a worse price than base unit pricing, base pricing is retained.
 15. Arithmetic is overflow-checked (`checked`) and may throw `OverflowException`.
 16. `Clear` behavior is idempotent (calling it multiple times keeps basket empty and total at zero).
-17. Core types are not designed for concurrent mutation from multiple threads on the same checkout instance.
-18. Console pricing rules are loaded from `pricing-rules.json` at startup.
-19. Console deserializer currently supports policy types `n_for_x` and `percent_off`.
-20. Console policy type matching is case-insensitive after normalization.
-21. Console policy parameters are flattened per policy object (`quantity`, `price`, `percentage`) and are deserialized using web defaults (case-insensitive property matching).
-22. Test coverage gate targets `CheckoutKata.Core` with minimum 95% line coverage when `EnforceCoverageGate=true`.
+17. Checkout bag charges are selected separately from scanned item SKUs and are not eligible for item discount policies.
+18. `BagSelectionCheckout` exposes bag count through `IBagSelection`, item/bag cost reads through `ICheckoutCostBreakdown`, and the full surface through `IBagSelectionCheckout`.
+19. Console checkout bags are hardcoded at 10 monetary units each.
+20. Core types are not designed for concurrent mutation from multiple threads on the same checkout instance.
+21. Console pricing rules are loaded from `pricing-rules.json` at startup.
+22. Console deserializer currently supports policy types `n_for_x` and `percent_off`.
+23. Console policy type matching is case-insensitive after normalization.
+24. Console policy parameters are flattened per policy object (`quantity`, `price`, `percentage`) and are deserialized using web defaults (case-insensitive property matching).
+25. Test coverage gate targets `CheckoutKata.Core` with minimum 95% line coverage when `EnforceCoverageGate=true`.
