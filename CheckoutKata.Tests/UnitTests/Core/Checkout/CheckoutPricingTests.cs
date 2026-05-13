@@ -91,11 +91,9 @@ public class CheckoutPricingTests
     [Test]
     public void GetTotalPrice_WithPercentOffPolicy_AppliesPercentDiscount()
     {
-        var checkout = CreateCheckout(
-            new[]
-            {
-                CreatePercentOffRule("A", 100, 20)
-            });
+        var checkout = CreateCheckout([
+                                          CreatePercentOffRule("A", 100, 20)
+                                      ]);
 
         ScanMany(checkout, "AAA");
 
