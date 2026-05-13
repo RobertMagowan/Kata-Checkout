@@ -169,5 +169,6 @@ public class CheckoutAutomaticBagPolicyTests
         {
             return bagCount;
         }
+
     }
 }

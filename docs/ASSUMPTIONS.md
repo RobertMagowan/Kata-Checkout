@@ -19,11 +19,11 @@ The following assumptions reflect the current repository state (`CheckoutKata.Co
 15. Arithmetic is overflow-checked (`checked`) and may throw `OverflowException`.
 16. `Clear` behavior is idempotent (calling it multiple times keeps basket empty and total at zero).
 17. Checkout bag charges are separate from scanned item SKUs and are not eligible for item discount policies.
-18. `BagSelectionCheckout` exposes bag count through `IBagSelection`, item/bag cost reads through `ICheckoutCostBreakdown`, and the full surface through `IBagSelectionCheckout`.
+18. Manual bag selection is represented by `ManualBagQuantityPolicy`, which implements `IManualBagQuantityPolicy`.
 19. `Checkout` exposes its full command/read surface through `ICheckoutSession`.
-20. `BagSelectionCheckout` decorates `ICheckoutSession` rather than depending on the concrete `Checkout` type.
-21. `BagAwareCheckout` exposes automatically calculated bag count through `IBagCountReader`, item/bag cost reads through `ICheckoutCostBreakdown`, and the full surface through `IBagAwareCheckout`.
-22. `BagAwareCheckout` decorates `ICheckoutSession` rather than depending on the concrete `Checkout` type.
+20. `BagAwareCheckout` exposes bag count through `IBagCountReader`, item/bag cost reads through `ICheckoutCostBreakdown`, and the full surface through `IBagAwareCheckout`.
+21. `BagAwareCheckout` decorates `ICheckoutSession` rather than depending on the concrete `Checkout` type.
+22. `BagAwareCheckout.Clear` clears scanned items only; bag quantity lifecycle behavior belongs to the injected quantity policy.
 23. Console checkout bags are hardcoded at 10 monetary units each and calculated as one bag per 10 scanned items.
 24. Core types are not designed for concurrent mutation from multiple threads on the same checkout instance.
 25. Console pricing rules are loaded from `pricing-rules.json` at startup.

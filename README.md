@@ -28,22 +28,21 @@ Default console rules (from `CheckoutKata.Console/pricing-rules.json`):
   - `ICheckout` minimal contract (`Scan`, `GetTotalPrice`, `Clear`).
   - `ICheckoutStateReader` typed snapshot reads (`GetScannedItems`, `GetPricingRules`).
   - `ICheckoutSession` convenience composite contract for clients that need both checkout commands and state reads.
-  - `IBagSelection` checkout bag selection contract.
   - `IBagCountReader` checkout bag count read contract.
   - `ICheckoutCostBreakdown` typed item/bag cost reads.
-  - `IBagSelectionCheckout` convenience composite contract for clients that need the full manually selected bag checkout surface.
   - `IBagAwareCheckout` convenience composite contract for clients that need the full automatically calculated bag checkout surface.
   - `IScannedItemValidator` extension point for scan validation policy.
   - `IBasketPricer` extension point for total pricing policy.
   - `IBagPolicy` extension point for checkout bag charge policy.
   - `IBagQuantityPolicy` extension point for checkout bag quantity calculation.
+  - `IManualBagQuantityPolicy` extension point for manually selected checkout bag quantity.
   - `Checkout` orchestration + scan state (defaulting to `ItemValidator` + `BasketPricer`).
   - `PricingRule` immutable rule model (`Item` naming only).
   - `BagPolicy` default checkout bag charge implementation.
+  - `ManualBagQuantityPolicy` manually selected checkout bag quantity implementation.
   - `OneBagPerItemCountPolicy` checkout bag quantity implementation.
   - `BasketPricer` default pricing implementation.
-  - `BagSelectionCheckout` wrapper that decorates `ICheckoutSession`, adds selected bag charges, exposes item/bag totals, and forwards item checkout behavior.
-  - `BagAwareCheckout` wrapper that decorates `ICheckoutSession`, calculates bag count from scanned items, exposes item/bag totals, and forwards item checkout behavior.
+  - `BagAwareCheckout` wrapper that decorates `ICheckoutSession`, calculates bag count from an injected quantity policy, exposes item/bag totals, and forwards item checkout behavior.
   - `ItemValidator` default scan input validation implementation.
   - `PricingRuleValidator` constructor-time rule validation.
   - Policy implementations:
@@ -146,8 +145,9 @@ checkout.Clear();
 - Invalid scan inputs throw exceptions in the Core library.
 - `Checkout` is stateful and non-idempotent (`Scan` increments basket quantity per call).
 - Checkout bag charges are separate from scanned item SKUs and are not eligible for item discount policies.
-- `BagSelectionCheckout` exposes bag selection through `IBagSelection` and item/bag cost reads through `ICheckoutCostBreakdown`.
 - `BagAwareCheckout` calculates bag count through `IBagQuantityPolicy` and item/bag cost reads through `ICheckoutCostBreakdown`.
+- Manual bag selection is represented by `ManualBagQuantityPolicy`; automatic bag calculation is represented by `OneBagPerItemCountPolicy`.
+- `BagAwareCheckout.Clear` clears scanned items only; bag quantity lifecycle behavior belongs to the injected quantity policy.
 - The console app hardcodes checkout bags at 10 monetary units each and calculates one bag per 10 scanned items.
 - Discount policies are evaluated per item and the lowest total for that item is selected (no discount stacking).
 - Arithmetic is guarded using `checked` to fail fast on overflow.

@@ -1,8 +1,6 @@
 namespace CheckoutKata.Core.Interfaces;
 
-public interface IBagSelection
+public interface IManualBagQuantityPolicy : IBagQuantityPolicy
 {
     void SetBagCount(int quantity);
-
-    int GetBagCount();
 }
