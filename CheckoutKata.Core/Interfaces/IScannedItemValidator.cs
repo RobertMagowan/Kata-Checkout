@@ -5,6 +5,5 @@ using Models;
 
 public interface IScannedItemValidator
 {
-    string ValidateScannedItem(string item,
-                               IReadOnlyDictionary<string, PricingRule> pricingRulesByItem);
+    string ValidateScannedItem(string item, IReadOnlyDictionary<string, PricingRule> pricingRulesByItem);
 }

@@ -3,6 +3,7 @@ using CheckoutKata.Core.Checkout;
 using CheckoutKata.Core.Models;
 using CheckoutKata.Core.Services;
 using CheckoutKata.Core.Interfaces;
+using CheckoutKata.Core.Policies;
 
 IReadOnlyCollection<PricingRule> pricingRules;
 
@@ -171,5 +172,6 @@ static IReadOnlyCollection<PricingRule> LoadPricingRules(string relativePath)
 
 static ICheckout CreateCheckout(IReadOnlyCollection<PricingRule> pricingRules)
 {
-    return new Checkout(pricingRules, new ItemValidator(), new BasketPricer(), new PricingRuleValidator());
+    var voucher = new SaveTenPolicy();
+    return new Checkout(pricingRules, new ItemValidator(), new CouponBasketPricer(voucher), new PricingRuleValidator());
 }
