@@ -35,12 +35,11 @@ public sealed class PricingRuleValidator : IPricingRuleValidator
         ArgumentNullException.ThrowIfNull(rule);
 
         if (string.IsNullOrWhiteSpace(rule.Item)) throw new ArgumentException("Rule item cannot be null, empty, or whitespace.", nameof(rule));
-
         if (rule.Item.Length != 1 || !char.IsLetter(rule.Item[0]) || !char.IsUpper(rule.Item[0])) throw new ArgumentException("Rule item must be a single uppercase letter.", nameof(rule));
         if (rule.UnitPrice <= 0) throw new ArgumentException("Unit price must be greater than zero.", nameof(rule));
-        if (rule.DiscountPolicies is null || rule.DiscountPolicies.Count == 0) return;
+        //if (rule.DiscountPolicies is null || rule.DiscountPolicies.Count == 0) return;
 
-        foreach (var policy in rule.DiscountPolicies)
+        foreach (var policy in rule?.DiscountPolicies ?? Enumerable.Empty<IDiscountPolicy>())
         {
             ArgumentNullException.ThrowIfNull(policy);
         }

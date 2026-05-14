@@ -3,7 +3,7 @@ namespace CheckoutKata.Console;
 using System.Text.Json;
 using Core.Interfaces;
 using Core.Models;
-using Core.Policies;
+using Core.Policies.DiscountPolicy;
 
 internal static class PricingRulesJsonDeserializer
 {

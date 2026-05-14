@@ -3,7 +3,7 @@ namespace CheckoutKata.Core.Checkout;
 using Interfaces;
 using Models;
 
-public sealed class Checkout : ICheckout, ICheckoutStateReader
+public sealed class Checkout : ICheckoutSession
 {
     private readonly IDictionary<string, int> _scannedItemCounts = new Dictionary<string, int>(StringComparer.Ordinal);
     private readonly IScannedItemValidator _itemValidator;

@@ -3,7 +3,7 @@ using CheckoutKata.Core;
 namespace CheckoutKata.Tests.UnitTests.Core.Checkout;
 
 using CheckoutKata.Core.Models;
-using CheckoutKata.Core.Policies;
+using CheckoutKata.Core.Policies.DiscountPolicy;
 using CheckoutKata.Core.Services;
 
 [Category("Core")]

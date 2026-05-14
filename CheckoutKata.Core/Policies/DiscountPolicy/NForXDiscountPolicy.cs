@@ -1,4 +1,4 @@
-namespace CheckoutKata.Core.Policies;
+namespace CheckoutKata.Core.Policies.DiscountPolicy;
 
 using Interfaces;
 

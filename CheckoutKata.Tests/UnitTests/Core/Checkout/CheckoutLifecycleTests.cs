@@ -1,7 +1,7 @@
 using CheckoutKata.Core;
 using CheckoutKata.Core.Interfaces;
 using CheckoutKata.Core.Models;
-using CheckoutKata.Core.Policies;
+using CheckoutKata.Core.Policies.DiscountPolicy;
 using CheckoutKata.Core.Services;
 
 namespace CheckoutKata.Tests.UnitTests.Core.Checkout;
